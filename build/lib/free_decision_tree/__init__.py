@@ -1,1 +1,1 @@
-from .free_regression import DecisionTree
+from .free_decision_tree import DecisionTree
