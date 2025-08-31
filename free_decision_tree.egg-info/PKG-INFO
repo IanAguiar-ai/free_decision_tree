@@ -1,0 +1,30 @@
+Metadata-Version: 2.2
+Name: free_decision_tree
+Version: 0.0.1
+Summary: Modifiable decision tree.
+Author: ['Ian dos Anjos Melo Aguiar']
+Author-email: <iannaianjos@gmail.com>
+Keywords: python,regression
+Classifier: Development Status :: 1 - Planning
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Unix
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Description-Content-Type: text/markdown
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: pandas
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: keywords
+Dynamic: requires-dist
+Dynamic: summary
+
+
+# free_decision_tree
+
+
