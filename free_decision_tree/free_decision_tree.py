@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
@@ -12,7 +13,7 @@ class DecisionTree:
     ...
     """
     __slots__ = ("dt", "y", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
-                 "__function_loss", "__calc_loss", "value_loss", "output", "__args", "__print_")
+                 "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_")
     
     def __init__(self, data:pd.DataFrame, y:str, min_samples:int = 3, depth:int = 0, max_depth:int = 3,
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, print:bool = False) -> None:
@@ -39,6 +40,7 @@ class DecisionTree:
         self.__calc_loss:"function" = loss_calc
         self.value_loss:float = None
         self.output:float = self.dt[self.y].mean()
+        self.__y_loss:float = self.__function_loss(self.dt[self.y])
 
         # For son
         self.__args:dict = {"y":self.y,
@@ -151,6 +153,50 @@ Output: {self.output}
         self.rs:DecisionTree = DecisionTree(self.dt[self.dt[self.variable_division] > self.division], **self.__args)
         return None
 
+    def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
+        """
+        ...
+        """
+        if figsize == None:
+            figsize = (3.5*self.__max_depth, 2*self.__max_depth)
+        
+        if ax is None:
+            fig, ax = plt.subplots(figsize = figsize)
+            ax.set_axis_off()
+            self.plot_tree(ax = ax, x = x, y = y, dx = dx, dy = dy, figsize = figsize, fontsize = fontsize)
+            plt.tight_layout()
+            plt.show()
+            return
+
+        # texto do nó
+        if self.variable_division is None:
+            label = f"Leaf\nSamples: {self.len_dt}\nLoss: {self.__y_loss:.4f}\nOutput: {self.output:.4f}"
+            color:str = "lightgreen"
+            alpha:float = 1
+        elif self.__depth == 0:
+            label = f"Output: {self.y}\n{self.variable_division} <= {self.division:.2f}\nSamples: {self.len_dt}\nLoss: {self.__y_loss:.4f}"
+            color:str = "orange"
+            alpha:float = 1
+        else:
+            label = f"{self.variable_division} <= {self.division:.2f}\nSamples: {self.len_dt}\nLoss: {self.__y_loss:.4f}"
+            color:str = "lightblue"
+            alpha:float = 1
+
+        if fontsize == None:
+            fontsize = max(15 - 2*self.__depth, 6)
+
+        ax.text(x, y, label, ha = "center", va = "center",
+                bbox = dict(boxstyle = "round", facecolor = color, edgecolor = "black", alpha = alpha),
+                fontsize = fontsize)
+
+        # Son
+        if self.ls is not None:
+            ax.plot([x, x-dx], [y-0.02, y-dy+0.02], color = "black")
+            self.ls.plot_tree(ax = ax, x = x-dx, y = y-dy, dx = dx/2, dy = dy)
+        if self.rs is not None:
+            ax.plot([x, x+dx], [y-0.02, y-dy+0.02], color = "black")
+            self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
+
 if __name__ == "__main__":
     import seaborn as sns
     from sklearn.preprocessing import StandardScaler
@@ -164,7 +210,7 @@ if __name__ == "__main__":
 
     print(df)
 
-    model = DecisionTree(data = df, y = "petal_length", print = False)
+    model = DecisionTree(data = df, y = "petal_length", max_depth = 3, print = False)
     model.train()
     print(model.ls)
     print(model.rs)
@@ -177,3 +223,4 @@ if __name__ == "__main__":
 
     print(df)
     print(model.predict(df.iloc[20:20+1]))
+    model.plot_tree()
