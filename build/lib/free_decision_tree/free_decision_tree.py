@@ -6,7 +6,7 @@ def simple_loss(y:pd.DataFrame) -> float:
     return 1/len(y) * sum([(y_i - y_)*(y_i - y_) for y_i in y])
 
 def calc_loss(loss_1:float, loss_2:float) -> float:
-    return loss_1 + loss_2
+    return max(loss_1, loss_2) # loss_1*loss_1, loss_2*loss_2
 
 class DecisionTree:
     """
