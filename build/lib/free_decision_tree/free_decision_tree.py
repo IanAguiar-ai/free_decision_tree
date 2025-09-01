@@ -51,6 +51,15 @@ class DecisionTree:
                             "loss_calc":self.__calc_loss,
                             "print":self.__print_}
 
+        # Train
+        self.train()
+
+    def __call__(self, X:pd.DataFrame) -> float:
+        """
+        ...
+        """
+        return self.predict(X)
+
     def __print(self, str_:str, end = "\n"):
         if self.__print_:
             print(str_, end = end)
@@ -67,7 +76,8 @@ Values:
     Depth: {'root' if self.__depth == 0 else self.__depth}
     Division in: {self.variable_division}
     In value: <= {self.division}
-    Loss: {self.value_loss}
+    Self loss: {self.__y_loss}
+    Loss in division: {self.value_loss}
 
 Variables:
     Min Samples: {self.__min_samples}
@@ -76,7 +86,10 @@ Variables:
 Output: {self.output}
 """
 
-    def predict(self, X:pd.DataFrame) -> float:        
+    def __recursive_predict(self, X:pd.DataFrame) -> float:
+        """
+        ...
+        """
         if (self.division == None) or (self.variable_division == None):
             return self.output
 
@@ -93,6 +106,17 @@ Output: {self.output}
                 return self.rs.predict(X)
             else:
                 return self.output
+
+    def predict(self, X:pd.DataFrame) -> float or list:
+        """
+        ...
+        """
+        if len(X) == 1: # float
+            return self.__recursive_predict(X)
+        else: # list
+            i = 10
+            print(X.iloc[i:i+1])
+            return [self.__recursive_predict(X.iloc[i:i+1]) for i in range(len(X))]
 
     def train(self) -> None:
         """
@@ -204,23 +228,18 @@ if __name__ == "__main__":
     df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
     df = df.drop(columns = ["species"])
 
-    scaler = StandardScaler()
-    df_padronizado = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
-
+    #scaler = StandardScaler()
+    #df_padronizado = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
 
     print(df)
 
     model = DecisionTree(data = df, y = "petal_length", max_depth = 3, print = False)
-    model.train()
+    print(model)
     print(model.ls)
     print(model.rs)
-    values = []
-    for i in range(len(df)):
-        #print(f"i: {i:03}")
-        values.append(model.predict(df.iloc[i:i+1]))
-
+    values = model.predict(df)
     df["y"] = values
 
     print(df)
-    print(model.predict(df.iloc[20:20+1]))
+    print(model(df.iloc[20:20+1]))
     model.plot_tree()
