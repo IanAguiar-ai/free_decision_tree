@@ -114,8 +114,6 @@ Output: {self.output}
         if len(X) == 1: # float
             return self.__recursive_predict(X)
         else: # list
-            i = 10
-            print(X.iloc[i:i+1])
             return [self.__recursive_predict(X.iloc[i:i+1]) for i in range(len(X))]
 
     def train(self) -> None:
@@ -146,10 +144,6 @@ Output: {self.output}
 
         # Update tree
         self.__update_tree()
-
-        # Recursive train
-        self.ls.train()
-        self.rs.train()
         return None
 
     def __calc_loss_tree(self, dt_1:pd.DataFrame, dt_2:pd.DataFrame, col:str) -> float:
@@ -173,8 +167,14 @@ Output: {self.output}
         """
         ...
         """
-        self.ls:DecisionTree = DecisionTree(self.dt[self.dt[self.variable_division] <= self.division], **self.__args)
-        self.rs:DecisionTree = DecisionTree(self.dt[self.dt[self.variable_division] > self.division], **self.__args)
+        if self.variable_division != None:
+            # Division dataframe
+            self.ls:DecisionTree = DecisionTree(self.dt[self.dt[self.variable_division] <= self.division], **self.__args)
+            self.rs:DecisionTree = DecisionTree(self.dt[self.dt[self.variable_division] > self.division], **self.__args)
+
+            # Recursive train
+            self.ls.train()
+            self.rs.train()
         return None
 
     def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
@@ -231,9 +231,9 @@ if __name__ == "__main__":
     #scaler = StandardScaler()
     #df_padronizado = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
 
-    print(df)
+    #print(df)
 
-    model = DecisionTree(data = df, y = "petal_length", max_depth = 3, print = False)
+    model = DecisionTree(data = df, y = "petal_length", max_depth = 7, print = False)
     print(model)
     print(model.ls)
     print(model.rs)
