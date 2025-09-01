@@ -11,7 +11,7 @@ if __name__ == "__main__":
     df = df.dropna()
     #print(df)
 
-    model = DecisionTree(data = df.iloc[:], y = "survived", max_depth = 3, print = False, train = True)
+    model = DecisionTree(data = df.iloc[:], y = "survived", max_depth = 5, print = False, train = True)
     #model.plot_sensitivity(train = df.iloc[:int(len(df)*0.7)], test = df.iloc[int(len(df)*0.3):])
 
     #scaler = StandardScaler()

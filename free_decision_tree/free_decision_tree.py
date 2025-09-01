@@ -11,7 +11,7 @@ def calc_loss(loss_1:float, loss_2:float) -> float:
     return max(loss_1, loss_2) # loss_1*loss_1, loss_2*loss_2
 
 class Plot:
-    __slots__ = ("total", "length", "time", "dif_time", "count")
+    __slots__ = ("total", "length", "time", "initial_time", "dif_time", "count")
         
     def __init__(self, total:int, length:int = 10, dif_time:float = 0.2):
         self.total:int = total
@@ -19,8 +19,12 @@ class Plot:
         self.dif_time = dif_time
         self.count = 0
         self.time = time()
+        self.initial_time = time()
 
     def load(self, close:bool = False) -> None:
+        if self.count == 0:
+            self.initial_time = time()
+
         self.count += 1
         now:int = self.count
         if time() - self.time > self.dif_time or (now == self.total) or close:
@@ -28,12 +32,13 @@ class Plot:
                 position:int = int(0.5+now*self.length)//self.total
                 _position:int = self.length - (now*self.length)//self.total
                 load:str = "|" + "#"*position + "-"*_position + "|"
+                seconds_to_end:int = (time() - self.initial_time)/self.count * (self.total - self.count)
 
                 if close:
-                    print(f"\r|{'#'*self.length}| {self.total}/{self.total}")
+                    print(f"\r|{'#'*self.length}| {self.total}/{self.total}  | 0000 seconds to end")
                     self.count = 0
                 elif self.count <= self.total:
-                    print(f"\r{load} {now}/{self.total}", end = "")
+                    print(f"\r{load} {now}/{self.total} | {int(seconds_to_end):04} seconds to end", end = "")
             except ZeroDivisionError:
                 pass
             self.time = time()
