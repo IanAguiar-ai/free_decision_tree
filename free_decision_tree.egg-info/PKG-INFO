@@ -42,6 +42,10 @@ pip install git+https://github.com/IanAguiar-ai/free_decision_tree
 
 ...
 
+### Plot sensitivity
+
+...
+
 ### Modifiable parts
 
 - Individual losses (```loss_function```)
