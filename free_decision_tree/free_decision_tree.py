@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from time import time, sleep
+from time import time
+from math import log
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
@@ -48,7 +49,7 @@ class DecisionTree:
     
     def __init__(self, data:pd.DataFrame, y:str, min_samples:int = 3, depth:int = 0, max_depth:int = 3,
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, print:bool = False,
-                 plot:Plot = None) -> None:
+                 plot:Plot = None, train:bool = True) -> None:
         """
         ...
         """
@@ -76,7 +77,7 @@ class DecisionTree:
 
         # To plot loading
         if plot == None:
-            self.plot = Plot(total = int(2**(self.__max_depth*2 - 2)-1), length = 50)
+            self.plot = Plot(total = int(2**(self.__max_depth*2 - 2) - 1), length = 50)
         else:
             self.plot = plot
 
@@ -91,7 +92,8 @@ class DecisionTree:
                             "plot":self.plot}
 
         # Train
-        self.train()
+        if train:
+            self.train()
 
     def __call__(self, X:pd.DataFrame) -> float:
         """
@@ -265,19 +267,65 @@ Output: {self.output}
             ax.plot([x, x+dx], [y-0.02, y-dy+0.02], color = "black")
             self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
 
+    def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None) -> None:
+        """
+        ...
+        """
+        if y == None:
+            y:str = self.y
+            
+        answers:dict = {"depth":[], "mse_train":[], "mse_test":[]}
+        for i in range(1, int(log(self.len_dt/self.__min_samples, 2)) + 1):
+            answers["depth"].append(i)
+            temporary_model:DecisionTree = DecisionTree(train, y = self.y, max_depth = i,
+                                                        loss_function = self.__function_loss,
+                                                        loss_calc = self.__calc_loss)
+
+            y_:list = temporary_model.predict(train)
+            y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(train[y], y_)])
+            answers["mse_train"].append(y_)
+            
+            y_:list = temporary_model.predict(test)
+            y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(test[y], y_)])
+            answers["mse_test"].append(y_)
+
+        answers:pd.DataFrame = pd.DataFrame(answers)
+
+        best_idx   = answers["mse_test"].idxmin()
+        best_depth = int(answers.loc[best_idx, "depth"])
+
+        fig, ax = plt.subplots(figsize = (5, 3))
+        plt.plot(answers["depth"], answers["mse_train"], color = "blue", label = "Train")
+        plt.plot(answers["depth"], answers["mse_test"], color = "orange", label = "Test")
+        plt.axvline(x = best_depth, color = "red", linestyle = "--", linewidth = 1, alpha = 0.5)
+        plt.title("Sensitivity Test")
+        plt.ylabel("MSE")
+        plt.xlabel("Depth")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
 if __name__ == "__main__":
     import seaborn as sns
     from sklearn.preprocessing import StandardScaler
 
-    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
-    df = df.drop(columns = ["species"])
+    df = sns.load_dataset("titanic")  # ou "iris", "tips", "titanic", "penguins", etc.
+    df["sex"] = df["sex"].replace({"female": 0, "male": 1})
+    df["alone"] = df["alone"].replace({False: 0, True: 1})
+    df["age"] = df["age"]
+    df = df.drop(columns = list(set(df.columns) ^ {"survived", "age", "sex", "alone"}))#["species"])
+    df = df.dropna()
+    #print(df)
+
+    model = DecisionTree(data = df.iloc[:], y = "survived", max_depth = 3, print = False, train = True)
+    #model.plot_sensitivity(train = df.iloc[:int(len(df)*0.7)], test = df.iloc[int(len(df)*0.3):])
 
     #scaler = StandardScaler()
     #df_padronizado = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
 
     #print(df)
 
-    model = DecisionTree(data = df, y = "petal_length", max_depth = 4, print = False)
+    #model = DecisionTree(data = df, y = "petal_length", max_depth = 4, print = False)
     print(model)
     print(model.ls)
     print(model.rs)
@@ -287,3 +335,4 @@ if __name__ == "__main__":
     print(df)
     print(model(df.iloc[20:20+1]))
     model.plot_tree()
+
