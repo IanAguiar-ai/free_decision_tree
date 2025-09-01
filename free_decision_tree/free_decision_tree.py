@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from time import time, sleep
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
@@ -8,15 +9,46 @@ def simple_loss(y:pd.DataFrame) -> float:
 def calc_loss(loss_1:float, loss_2:float) -> float:
     return max(loss_1, loss_2) # loss_1*loss_1, loss_2*loss_2
 
+class Plot:
+    __slots__ = ("total", "length", "time", "dif_time", "count")
+        
+    def __init__(self, total:int, length:int = 10, dif_time:float = 0.2):
+        self.total:int = total
+        self.length:int = length
+        self.dif_time = dif_time
+        self.count = 0
+        self.time = time()
+
+    def load(self, close:bool = False) -> None:
+        self.count += 1
+        now:int = self.count
+        if time() - self.time > self.dif_time or (now == self.total) or close:
+            try:
+                position:int = int(0.5+now*self.length)//self.total
+                _position:int = self.length - (now*self.length)//self.total
+                load:str = "|" + "#"*position + "-"*_position + "|"
+
+                if close:
+                    print(f"\r|{'#'*self.length}| {self.total}/{self.total}")
+                    self.count = 0
+                elif self.count <= self.total:
+                    print(f"\r{load} {now}/{self.total}", end = "")
+            except ZeroDivisionError:
+                pass
+            self.time = time()
+        return None
+
 class DecisionTree:
     """
     ...
     """
     __slots__ = ("dt", "y", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
-                 "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_")
+                 "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
+                 "plot")
     
     def __init__(self, data:pd.DataFrame, y:str, min_samples:int = 3, depth:int = 0, max_depth:int = 3,
-                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, print:bool = False) -> None:
+                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, print:bool = False,
+                 plot:Plot = None) -> None:
         """
         ...
         """
@@ -28,7 +60,7 @@ class DecisionTree:
         self.division:float = None
         self.variable_division:str = None
         self.__depth:int = depth
-        self.__max_depth:int =  max_depth
+        self.__max_depth:int = max_depth
         self.__print_:bool = print
 
         # Sons
@@ -42,6 +74,12 @@ class DecisionTree:
         self.output:float = self.dt[self.y].mean()
         self.__y_loss:float = self.__function_loss(self.dt[self.y])
 
+        # To plot loading
+        if plot == None:
+            self.plot = Plot(total = int(2**(self.__max_depth*2 - 2)-1), length = 50)
+        else:
+            self.plot = plot
+
         # For son
         self.__args:dict = {"y":self.y,
                             "min_samples":self.__min_samples,
@@ -49,7 +87,8 @@ class DecisionTree:
                             "max_depth":self.__max_depth,
                             "loss_function":self.__function_loss,
                             "loss_calc":self.__calc_loss,
-                            "print":self.__print_}
+                            "print":self.__print_,
+                            "plot":self.plot}
 
         # Train
         self.train()
@@ -144,6 +183,11 @@ Output: {self.output}
 
         # Update tree
         self.__update_tree()
+
+        # To print and stop print load
+        self.plot.load()
+        if self.__depth == 0:
+            self.plot.load(close = True)
         return None
 
     def __calc_loss_tree(self, dt_1:pd.DataFrame, dt_2:pd.DataFrame, col:str) -> float:
@@ -233,7 +277,7 @@ if __name__ == "__main__":
 
     #print(df)
 
-    model = DecisionTree(data = df, y = "petal_length", max_depth = 7, print = False)
+    model = DecisionTree(data = df, y = "petal_length", max_depth = 4, print = False)
     print(model)
     print(model.ls)
     print(model.rs)
