@@ -1,6 +1,7 @@
 README.md
 setup.py
 free_decision_tree/__init__.py
+free_decision_tree/free_decision_tree.py
 free_decision_tree/tests.py
 free_decision_tree.egg-info/PKG-INFO
 free_decision_tree.egg-info/SOURCES.txt

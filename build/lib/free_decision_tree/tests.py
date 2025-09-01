@@ -1,7 +1,7 @@
 if __name__ == "__main__":
     import seaborn as sns
     from sklearn.preprocessing import StandardScaler
-    from decision_tree.free_decision_tree import DecisionTree
+    from free_decision_tree import DecisionTree
 
     df = sns.load_dataset("titanic")  # ou "iris", "tips", "titanic", "penguins", etc.
     df["sex"] = df["sex"].replace({"female": 0, "male": 1})

@@ -1,5 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from time import time
+from math import log
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
@@ -8,15 +10,46 @@ def simple_loss(y:pd.DataFrame) -> float:
 def calc_loss(loss_1:float, loss_2:float) -> float:
     return max(loss_1, loss_2) # loss_1*loss_1, loss_2*loss_2
 
+class Plot:
+    __slots__ = ("total", "length", "time", "dif_time", "count")
+        
+    def __init__(self, total:int, length:int = 10, dif_time:float = 0.2):
+        self.total:int = total
+        self.length:int = length
+        self.dif_time = dif_time
+        self.count = 0
+        self.time = time()
+
+    def load(self, close:bool = False) -> None:
+        self.count += 1
+        now:int = self.count
+        if time() - self.time > self.dif_time or (now == self.total) or close:
+            try:
+                position:int = int(0.5+now*self.length)//self.total
+                _position:int = self.length - (now*self.length)//self.total
+                load:str = "|" + "#"*position + "-"*_position + "|"
+
+                if close:
+                    print(f"\r|{'#'*self.length}| {self.total}/{self.total}")
+                    self.count = 0
+                elif self.count <= self.total:
+                    print(f"\r{load} {now}/{self.total}", end = "")
+            except ZeroDivisionError:
+                pass
+            self.time = time()
+        return None
+
 class DecisionTree:
     """
     ...
     """
     __slots__ = ("dt", "y", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
-                 "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_")
+                 "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
+                 "plot")
     
     def __init__(self, data:pd.DataFrame, y:str, min_samples:int = 3, depth:int = 0, max_depth:int = 3,
-                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, print:bool = False) -> None:
+                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, print:bool = False,
+                 plot:Plot = None, train:bool = True) -> None:
         """
         ...
         """
@@ -28,7 +61,7 @@ class DecisionTree:
         self.division:float = None
         self.variable_division:str = None
         self.__depth:int = depth
-        self.__max_depth:int =  max_depth
+        self.__max_depth:int = max_depth
         self.__print_:bool = print
 
         # Sons
@@ -42,6 +75,12 @@ class DecisionTree:
         self.output:float = self.dt[self.y].mean()
         self.__y_loss:float = self.__function_loss(self.dt[self.y])
 
+        # To plot loading
+        if plot == None:
+            self.plot = Plot(total = int(2**(self.__max_depth*2 - 2) - 1), length = 50)
+        else:
+            self.plot = plot
+
         # For son
         self.__args:dict = {"y":self.y,
                             "min_samples":self.__min_samples,
@@ -49,10 +88,12 @@ class DecisionTree:
                             "max_depth":self.__max_depth,
                             "loss_function":self.__function_loss,
                             "loss_calc":self.__calc_loss,
-                            "print":self.__print_}
+                            "print":self.__print_,
+                            "plot":self.plot}
 
         # Train
-        self.train()
+        if train:
+            self.train()
 
     def __call__(self, X:pd.DataFrame) -> float:
         """
@@ -144,6 +185,11 @@ Output: {self.output}
 
         # Update tree
         self.__update_tree()
+
+        # To print and stop print load
+        self.plot.load()
+        if self.__depth == 0:
+            self.plot.load(close = True)
         return None
 
     def __calc_loss_tree(self, dt_1:pd.DataFrame, dt_2:pd.DataFrame, col:str) -> float:
@@ -221,25 +267,40 @@ Output: {self.output}
             ax.plot([x, x+dx], [y-0.02, y-dy+0.02], color = "black")
             self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
 
-if __name__ == "__main__":
-    import seaborn as sns
-    from sklearn.preprocessing import StandardScaler
+    def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None) -> None:
+        """
+        ...
+        """
+        if y == None:
+            y:str = self.y
+            
+        answers:dict = {"depth":[], "mse_train":[], "mse_test":[]}
+        for i in range(1, int(log(self.len_dt/self.__min_samples, 2)) + 1):
+            answers["depth"].append(i)
+            temporary_model:DecisionTree = DecisionTree(train, y = self.y, max_depth = i,
+                                                        loss_function = self.__function_loss,
+                                                        loss_calc = self.__calc_loss)
 
-    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
-    df = df.drop(columns = ["species"])
+            y_:list = temporary_model.predict(train)
+            y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(train[y], y_)])
+            answers["mse_train"].append(y_)
+            
+            y_:list = temporary_model.predict(test)
+            y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(test[y], y_)])
+            answers["mse_test"].append(y_)
 
-    #scaler = StandardScaler()
-    #df_padronizado = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
+        answers:pd.DataFrame = pd.DataFrame(answers)
 
-    #print(df)
+        best_idx   = answers["mse_test"].idxmin()
+        best_depth = int(answers.loc[best_idx, "depth"])
 
-    model = DecisionTree(data = df, y = "petal_length", max_depth = 7, print = False)
-    print(model)
-    print(model.ls)
-    print(model.rs)
-    values = model.predict(df)
-    df["y"] = values
-
-    print(df)
-    print(model(df.iloc[20:20+1]))
-    model.plot_tree()
+        fig, ax = plt.subplots(figsize = (5, 3))
+        plt.plot(answers["depth"], answers["mse_train"], color = "blue", label = "Train")
+        plt.plot(answers["depth"], answers["mse_test"], color = "orange", label = "Test")
+        plt.axvline(x = best_depth, color = "red", linestyle = "--", linewidth = 1, alpha = 0.5)
+        plt.title("Sensitivity Test")
+        plt.ylabel("MSE")
+        plt.xlabel("Depth")
+        plt.legend()
+        plt.grid()
+        plt.show()
