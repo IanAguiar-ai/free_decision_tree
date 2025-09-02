@@ -312,7 +312,7 @@ Output: {self.output}
         fig, ax = plt.subplots(figsize = (5, 3))
         plt.plot(answers["depth"], answers["mse_train"], color = "blue", label = "Train")
         plt.plot(answers["depth"], answers["mse_test"], color = "orange", label = "Test")
-        plt.axvline(x = best_depth, color = "red", linestyle = "--", linewidth = 1, alpha = 0.8, label = "Ideal depth: {best_depth}")
+        plt.axvline(x = best_depth, color = "red", linestyle = "--", linewidth = 1, alpha = 0.8, label = f"Ideal depth: {best_depth}")
         plt.title("Sensitivity Test")
         plt.ylabel("MSE")
         plt.xlabel("Depth")
