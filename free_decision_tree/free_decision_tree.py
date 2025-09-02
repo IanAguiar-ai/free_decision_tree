@@ -271,6 +271,7 @@ Output: {self.output}
         if self.rs is not None:
             ax.plot([x, x+dx], [y-0.02, y-dy+0.02], color = "black")
             self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
+        return None
 
     def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None) -> None:
         """
@@ -308,4 +309,45 @@ Output: {self.output}
         plt.xlabel("Depth")
         plt.legend()
         plt.grid()
+        plt.tight_layout()
         plt.show()
+        return None
+
+    def plot_ci(self, test:pd.DataFrame = None, y:str = None, figsize:tuple = (5, 6), confidence:float = 0.95) -> None:
+        """
+        ...
+        """
+        def _confidence(real:list, expected:list, interval:float = 0.95) -> float:
+            diferences:list = sorted([abs(real_i - expected_i) for real_i, expected_i in zip(real, expected)])
+            return diferences[int((len(diferences)+0.5)*interval)]
+            
+        if test == None:
+            test:pd.DataFrame = self.dt
+            
+        if y == None:
+            y:str = self.y
+
+        y_estimate:list = self.predict(test)
+        y_real:list = list(test[y])
+        confidence_value:float = _confidence(y_real, y_estimate, interval = confidence)
+
+        expected:list = [min(min(y_estimate), min(y_real)), max(max(y_estimate), max(y_real))]
+        ci_1:float = [expected[0]-confidence_value, expected[1]-confidence_value]
+        ci_2:float = [expected[0]+confidence_value, expected[1]+confidence_value]
+    
+        fig, ax = plt.subplots(figsize = (5, 5), zorder = 0)
+        plt.scatter(y_real, y_estimate, color = "darkblue", alpha = 1/(len(test))**(1/3), label = "Sample")
+        plt.plot(expected, expected,
+                 color = "red", linestyle = "--", label = "Expected", zorder = 2)
+        plt.plot(expected, ci_1, color = "green", alpha = 0.9, linestyle = "--", zorder = 2)
+        plt.plot(expected, ci_2, color = "green", alpha = 0.9, linestyle = "--", zorder = 2)
+        plt.fill_between(expected, ci_1, ci_2, color = "green", alpha = 0.2, label = f"Confidence Interval\n({confidence*100}%) (~{confidence_value:0.04f})", zorder = 1)
+
+        plt.xlabel("Real")
+        plt.ylabel("Estimate")
+        plt.grid()
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+        return None
+        
