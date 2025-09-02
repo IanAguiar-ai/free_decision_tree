@@ -35,7 +35,7 @@ class Plot:
                 seconds_to_end:int = (time() - self.initial_time)/self.count * (self.total - self.count)
 
                 if close:
-                    print(f"\r|{'#'*self.length}| {self.total}/{self.total}  | 0000 seconds to end")
+                    print(f"\r|{'#'*self.length}| {self.total}/{self.total} | 0000 seconds to end")
                     self.count = 0
                 elif self.count <= self.total:
                     print(f"\r{load} {now}/{self.total} | {int(seconds_to_end):04} seconds to end", end = "")
@@ -50,11 +50,11 @@ class DecisionTree:
     """
     __slots__ = ("dt", "y", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
                  "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
-                 "plot")
+                 "plot", "__jumps")
     
-    def __init__(self, data:pd.DataFrame, y:str, min_samples:int = 3, depth:int = 0, max_depth:int = 3,
-                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, print:bool = False,
-                 plot:Plot = None, train:bool = True) -> None:
+    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 3, *, 
+                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss,
+                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, otimized:bool = True) -> None:
         """
         ...
         """
@@ -65,7 +65,7 @@ class DecisionTree:
         self.len_dt:int = len(data)
         self.division:float = None
         self.variable_division:str = None
-        self.__depth:int = depth
+        self.__depth:int = depth if depth != None else 0
         self.__max_depth:int = max_depth
         self.__print_:bool = print
 
@@ -82,9 +82,15 @@ class DecisionTree:
 
         # To plot loading
         if plot == None:
-            self.plot = Plot(total = int(2**(self.__max_depth*2 - 2) - 1), length = 50)
+            self.plot = Plot(total = int(2**(self.__max_depth+1) - 1), length = 50)
         else:
             self.plot = plot
+
+        # Otimized
+        if otimized:
+            self.__jumps = max(1, self.len_dt//2_000 * self.__max_depth)
+        else:
+            self.__jumps = 1
 
         # For son
         self.__args:dict = {"y":self.y,
@@ -94,7 +100,9 @@ class DecisionTree:
                             "loss_function":self.__function_loss,
                             "loss_calc":self.__calc_loss,
                             "print":self.__print_,
-                            "plot":self.plot}
+                            "plot":self.plot,
+                            "otimized":otimized,
+                            "train":False}
 
         # Train
         if train:
@@ -166,13 +174,15 @@ Output: {self.output}
         """
         ...
         """
+        self.plot.load()
+        
         self.__print(f"Train:\n\tDepth: {self.__depth} | Lenth: {self.len_dt}")
         if (self.len_dt < 2*self.__min_samples) or (self.__depth >= self.__max_depth):
             return None
         
         for col in self.dt.columns:
             if col != self.y:
-                for i in range(len(self.dt[col])):
+                for i in range(0, len(self.dt[col]), self.__jumps):
                     division:int = self.dt.iloc[i][col]
                     dt_1:pd.DataFrame = self.dt[self.dt[col] <= division]
                     dt_2:pd.DataFrame = self.dt[self.dt[col] > division]
@@ -191,8 +201,7 @@ Output: {self.output}
         # Update tree
         self.__update_tree()
 
-        # To print and stop print load
-        self.plot.load()
+        # To stop print load
         if self.__depth == 0:
             self.plot.load(close = True)
         return None
@@ -271,6 +280,7 @@ Output: {self.output}
         if self.rs is not None:
             ax.plot([x, x+dx], [y-0.02, y-dy+0.02], color = "black")
             self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
+        return None
 
     def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None) -> None:
         """
@@ -308,4 +318,45 @@ Output: {self.output}
         plt.xlabel("Depth")
         plt.legend()
         plt.grid()
+        plt.tight_layout()
         plt.show()
+        return None
+
+    def plot_ci(self, test:pd.DataFrame = None, y:str = None, figsize:tuple = (5, 6), confidence:float = 0.95) -> None:
+        """
+        ...
+        """
+        def _confidence(real:list, expected:list, interval:float = 0.95) -> float:
+            diferences:list = sorted([abs(real_i - expected_i) for real_i, expected_i in zip(real, expected)])
+            return diferences[int((len(diferences)+0.5)*interval)]
+            
+        if test == None:
+            test:pd.DataFrame = self.dt
+            
+        if y == None:
+            y:str = self.y
+
+        y_estimate:list = self.predict(test)
+        y_real:list = list(test[y])
+        confidence_value:float = _confidence(y_real, y_estimate, interval = confidence)
+
+        expected:list = [min(min(y_estimate), min(y_real)), max(max(y_estimate), max(y_real))]
+        ci_1:float = [expected[0]-confidence_value, expected[1]-confidence_value]
+        ci_2:float = [expected[0]+confidence_value, expected[1]+confidence_value]
+    
+        fig, ax = plt.subplots(figsize = (5, 5), zorder = 0)
+        plt.scatter(y_real, y_estimate, color = "darkblue", alpha = 1/(len(test))**(1/3), label = "Sample")
+        plt.plot(expected, expected,
+                 color = "red", linestyle = "--", label = "Expected", zorder = 2)
+        plt.plot(expected, ci_1, color = "green", alpha = 0.9, linestyle = "--", zorder = 2)
+        plt.plot(expected, ci_2, color = "green", alpha = 0.9, linestyle = "--", zorder = 2)
+        plt.fill_between(expected, ci_1, ci_2, color = "green", alpha = 0.2, label = f"Confidence Interval\n({confidence*100}%) (~{confidence_value:0.04f})", zorder = 1)
+
+        plt.xlabel("Real")
+        plt.ylabel("Estimate")
+        plt.grid()
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+        return None
+        
