@@ -285,7 +285,7 @@ Output: {self.output}
             self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
         return None
 
-    def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None) -> None:
+    def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None) -> int:
         """
         ...
         """
@@ -323,9 +323,9 @@ Output: {self.output}
         plt.grid()
         plt.tight_layout()
         plt.show()
-        return None
+        return best_depth
 
-    def plot_ci(self, test:pd.DataFrame = None, y:str = None, figsize:tuple = (5, 6), confidence:float = 0.95) -> None:
+    def plot_ci(self, test:pd.DataFrame = None, y:str = None, figsize:tuple = (5, 6), confidence:float = 0.95) -> float:
         """
         ...
         """
@@ -355,11 +355,11 @@ Output: {self.output}
         plt.plot(expected, ci_2, color = "green", alpha = 0.9, linestyle = "--", zorder = 2)
         plt.fill_between(expected, ci_1, ci_2, color = "green", alpha = 0.2, label = f"Confidence Interval\n({confidence*100}%) (~{confidence_value:0.04f})", zorder = 1)
 
-        plt.xlabel("Real")
-        plt.ylabel("Estimate")
+        plt.xlabel(f"Real ({self.y})")
+        plt.ylabel(f"Estimate ({self.y})")
         plt.grid()
         plt.legend()
         plt.tight_layout()
         plt.show()
-        return None
+        return confidence_value
         
