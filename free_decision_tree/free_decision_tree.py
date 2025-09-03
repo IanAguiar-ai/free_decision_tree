@@ -11,6 +11,9 @@ def calc_loss(loss_1:float, loss_2:float) -> float:
     return max(loss_1, loss_2) # loss_1*loss_1, loss_2*loss_2
 
 class Plot:
+    """
+    ...
+    """
     __slots__ = ("total", "length", "time", "initial_time", "dif_time", "count")
         
     def __init__(self, total:int, length:int = 10, dif_time:float = 0.2):
@@ -242,7 +245,7 @@ Output: {self.output}
         ...
         """
         if figsize == None:
-            figsize = (3.5*self.__max_depth, 2*self.__max_depth)
+            figsize = (3 + 2**(self.__max_depth), 2*self.__max_depth)
         
         if ax is None:
             fig, ax = plt.subplots(figsize = figsize)
