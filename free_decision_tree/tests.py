@@ -37,19 +37,23 @@ if __name__ == "__main__":
     df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
     df = df.drop(columns = ["species"])
     model = DecisionTree(data = df, y = "petal_length", max_depth = 5, min_samples = 2)
+    print(model)
     model.plot_tree()
-    model.plot_ci()
+    resp1 = model.plot_ci()
     model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
     
     
     def simple_loss_2(y) -> float:
         y_:float = y.mean()
-        return 1/len(y) * sum([(y_i - y_)*(y_i - y_) for y_i in y])
+        return 1/len(y) * sum([abs(y_i - y_)*(y_i - y_) for y_i in y])
 
     model = DecisionTree(data = df, y = "petal_length", max_depth = 5, min_samples = 2, loss_function = simple_loss_2)
+    print(model)
     model.plot_tree()
-    model.plot_ci()
+    resp2 = model.plot_ci()
     model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
+
+    print(f"CI\t{resp1:0.04f}\n\t{resp2:0.04f}")
 
 ###########################################################################
 ##    from random import random

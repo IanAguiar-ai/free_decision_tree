@@ -55,9 +55,9 @@ class DecisionTree:
                  "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
                  "plot", "__jumps")
     
-    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 3, *, 
+    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 1, *, 
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss,
-                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, otimized:bool = True) -> None:
+                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, otimized:int = -1) -> None:
         """
         ...
         """
@@ -90,10 +90,11 @@ class DecisionTree:
             self.plot = plot
 
         # Otimized
-        if otimized:
-            self.__jumps = max(1, self.len_dt//2_000 * self.__max_depth)
-        else:
+        if (otimized == False) or (otimized == None):
             self.__jumps = 1
+        else:
+            otimized = otimized if otimized >= 1 else self.len_dt//2_000 * self.__max_depth
+            self.__jumps = max(1, otimized)
 
         # For son
         self.__args:dict = {"y":self.y,
@@ -139,6 +140,7 @@ Values:
 Variables:
     Min Samples: {self.__min_samples}
     Max Depth: {self.__max_depth}
+    Otimized: {'True ' + '(' + str(self.len_dt//self.__jumps) + ' tests per dimension)' if self.__jumps != 1 else 'False'}
 
 Output: {self.output}
 """
