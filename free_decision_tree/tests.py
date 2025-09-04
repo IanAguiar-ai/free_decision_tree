@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     def simple_loss_2(y) -> float:
         y_:float = y.mean()
-        return sum([(y_i - y_)*(y_i - y_) for y_i in y])
+        return 1/len(y) * sum([(y_i - y_)*(y_i - y_) for y_i in y])
 
     model = DecisionTree(data = df, y = "petal_length", max_depth = 5, min_samples = 2, loss_function = simple_loss_2)
     model.plot_tree()
