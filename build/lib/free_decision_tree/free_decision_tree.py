@@ -5,10 +5,10 @@ from math import log
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
-    return 1/len(y) * sum([(y_i - y_)*(y_i - y_) for y_i in y])
+    return sum([(y_i - y_)*(y_i - y_) for y_i in y])
 
 def calc_loss(loss_1:float, loss_2:float) -> float:
-    return max(loss_1, loss_2) # loss_1*loss_1, loss_2*loss_2
+    return loss_1 + loss_2 #max(loss_1, loss_2)
 
 class Plot:
     """
@@ -55,9 +55,9 @@ class DecisionTree:
                  "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
                  "plot", "__jumps")
     
-    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 3, *, 
+    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 1, *, 
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss,
-                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, otimized:bool = True) -> None:
+                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, optimized:int = -1) -> None:
         """
         ...
         """
@@ -89,11 +89,12 @@ class DecisionTree:
         else:
             self.plot = plot
 
-        # Otimized
-        if otimized:
-            self.__jumps = max(1, self.len_dt//2_000 * self.__max_depth)
-        else:
+        # optimized
+        if (optimized == False) or (optimized == None):
             self.__jumps = 1
+        else:
+            optimized = self.len_dt//optimized if optimized >= 1 else self.len_dt//2_000 * self.__max_depth
+            self.__jumps = max(1, optimized)
 
         # For son
         self.__args:dict = {"y":self.y,
@@ -104,7 +105,7 @@ class DecisionTree:
                             "loss_calc":self.__calc_loss,
                             "print":self.__print_,
                             "plot":self.plot,
-                            "otimized":otimized,
+                            "optimized":optimized,
                             "train":False}
 
         # Train
@@ -139,6 +140,7 @@ Values:
 Variables:
     Min Samples: {self.__min_samples}
     Max Depth: {self.__max_depth}
+    optimized: {'True ' + '(' + str(self.len_dt//self.__jumps) + ' tests per dimension)' if self.__jumps != 1 else 'False'}
 
 Output: {self.output}
 """
