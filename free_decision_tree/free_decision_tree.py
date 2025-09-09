@@ -145,10 +145,10 @@ Variables:
 Output: {self.output}
 """
 
-    def __recursive_predict(self, X:pd.DataFrame) -> float:
+    def __recursive_predict(self, X:pd.DataFrame, *, memory_depth = None) -> float:
         """
         ...
-        """
+        """        
         if (self.division == None) or (self.variable_division == None):
             return self.output
 
@@ -156,22 +156,25 @@ Output: {self.output}
         if X[self.variable_division].iloc[0] <= self.division:
             self.__print(f"<--")
             if self.ls != None:
-                return self.ls.predict(X)
+                return self.ls.predict(X, memory_depth = memory_depth)
             else:
                 return self.output
         else:
             self.__print(f"-->")
             if self.rs != None:
-                return self.rs.predict(X)
+                return self.rs.predict(X, memory_depth = memory_depth)
             else:
                 return self.output
 
-    def predict(self, X:pd.DataFrame) -> float or list:
+    def predict(self, X:pd.DataFrame, *, memory_depth = None) -> float or list:
         """
         ...
         """
+        if memory_depth != None:
+            memory_depth[0] += 1
+
         if len(X) == 1: # float
-            return self.__recursive_predict(X)
+            return self.__recursive_predict(X, memory_depth = memory_depth)
         else: # list
             return [self.__recursive_predict(X.iloc[i:i+1]) for i in range(len(X))]
 
@@ -241,6 +244,20 @@ Output: {self.output}
             self.ls.train()
             self.rs.train()
         return None
+
+    def detect_depth(self) -> pd.DataFrame:
+        """
+        ...
+        """
+        temporary_depth:list = []
+        for i in range(len(self.dt)):
+            memory_depth:list = [-1]
+            self.predict(self.dt.iloc[i:i+1], memory_depth = memory_depth)
+            temporary_depth.append(memory_depth[0])
+
+        df_temporary:pd.DataFrame = self.dt.copy()
+        df_temporary["depth"] = temporary_depth
+        return df_temporary        
 
     def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
         """

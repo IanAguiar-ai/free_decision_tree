@@ -90,3 +90,21 @@ if __name__ == "__main__":
 ##    model.plot_tree()
 ##    model.plot_ci()
 
+###########################################################################
+##    from random import random
+##    from math import cos, sin
+##    import matplotlib.pyplot as plt
+##
+##    data = {"x":[cos(i/10)*5 + random() for i in range(100)],
+##            "y":[sin(i/10)*5 + random() for i in range(100)],
+##            "z":[cos(i/10) + sin(i/10) for i in range(100)]}
+##
+##    data = pd.DataFrame(data)
+##    model = DecisionTree(data = data, y = "z", max_depth = 7)
+##    model.plot_tree()
+##    nd = model.detect_depth()
+##    print(nd)
+##
+##    plt.figure(figsize = (10, 10))
+##    plt.scatter(nd["x"], nd["y"], c = nd["depth"], alpha = 0.8)
+##    plt.show()
