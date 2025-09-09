@@ -36,10 +36,10 @@ if __name__ == "__main__":
 ###########################################################################
     df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
     df = df.drop(columns = ["species"])
-    model = DecisionTree(data = df, y = "petal_length", max_depth = 5, min_samples = 2)
+    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 5, min_samples = 2)
     print(model)
     model.plot_tree()
-    resp1 = model.plot_ci()
+    resp1 = model.plot_ci(test = df.iloc[140:])
     model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
     
     

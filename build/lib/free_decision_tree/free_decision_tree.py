@@ -327,7 +327,7 @@ Output: {self.output}
         plt.show()
         return best_depth
 
-    def plot_ci(self, test:pd.DataFrame = None, y:str = None, figsize:tuple = (5, 6), confidence:float = 0.95) -> float:
+    def plot_ci(self, test:pd.DataFrame = False, y:str = None, figsize:tuple = (5, 6), confidence:float = 0.95) -> float:
         """
         ...
         """
@@ -335,7 +335,7 @@ Output: {self.output}
             diferences:list = sorted([abs(real_i - expected_i) for real_i, expected_i in zip(real, expected)])
             return diferences[int((len(diferences)+0.5)*interval)]
             
-        if test == None:
+        if (type(test) == bool) and (test == False):
             test:pd.DataFrame = self.dt
             
         if y == None:
