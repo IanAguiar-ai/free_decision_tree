@@ -1,6 +1,6 @@
 # DecisionTree
 
-A lightweight, customizable implementation of decision trees for regression, written from scratch with flexible loss functions and visualization tools.
+A customizable implementation of decision trees for regression, written from scratch with flexible loss functions and visualization tools.
 
 ---
 

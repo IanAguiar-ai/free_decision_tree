@@ -142,6 +142,10 @@ Variables:
     Max Depth: {self.__max_depth}
     optimized: {'True ' + '(' + str(self.len_dt//self.__jumps) + ' tests per dimension)' if self.__jumps != 1 else 'False'}
 
+Functions:
+    Loss Function: {self.__function_loss.__name__}
+    Join Loss: {self.__calc_loss.__name__}
+
 Output: {self.output}
 """
 
