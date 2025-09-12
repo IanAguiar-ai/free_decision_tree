@@ -10,6 +10,9 @@ def simple_loss(y:pd.DataFrame) -> float:
 def calc_loss(loss_1:float, loss_2:float) -> float:
     return loss_1 + loss_2 #max(loss_1, loss_2)
 
+def mean(dt:pd.DataFrame):
+    return dt.mean()
+
 class Plot:
     """
     ...
@@ -56,7 +59,7 @@ class DecisionTree:
                  "plot", "__jumps")
     
     def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 1, *, 
-                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss,
+                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, function_prediction_leaf:"function" = mean,
                  plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, optimized:int = -1) -> None:
         """
         ...
@@ -80,7 +83,7 @@ class DecisionTree:
         self.__function_loss:"function" = loss_function
         self.__calc_loss:"function" = loss_calc
         self.value_loss:float = None
-        self.output:float = self.dt[self.y].mean()
+        self.output:float = function_prediction_leaf(self.dt[self.y])
         self.__y_loss:float = self.__function_loss(self.dt[self.y])
 
         # To plot loading

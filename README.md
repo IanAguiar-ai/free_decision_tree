@@ -71,7 +71,7 @@ prediction = tree(X_test)
 ```
 
 ---
-
+function_prediction_leaf
 ### Plot tree
 
 ```python
@@ -112,8 +112,27 @@ Returns the approximate confidence error value (`float`).
 - **Individual losses** (`loss_function`)
   By default, variance loss (`simple_loss`). Can be replaced with custom metrics (e.g., entropy, Gini).
 
+```
+def simple_loss(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return sum([(y_i - y_)*(y_i - y_) for y_i in y])
+```
+
 - **Merging of losses** (`loss_calc`)
   By default, additive (`calc_loss`). Can be changed to `max`, weighted average, etc.
+
+```
+def calc_loss(loss_1:float, loss_2:float) -> float:
+    return loss_1 + loss_2 #max(loss_1, loss_2)
+```
+
+- **Function to prediction in leaf** (`function_prediction_leaf`)
+  By default, additive (`mean`). Can be changed.
+ 
+```
+def mean(dt:pd.DataFrame):
+    return dt.mean()
+```
 
 ---
 
