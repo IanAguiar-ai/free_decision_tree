@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from time import time
 from math import log
+import numpy as np
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
@@ -54,9 +55,9 @@ class DecisionTree:
     """
     ...
     """
-    __slots__ = ("dt", "y", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
+    __slots__ = ("dt", "y", "X", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
                  "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
-                 "plot", "__jumps")
+                 "plot", "__jumps", "__dt_with_y")
     
     def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 1, *, 
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, function_prediction_leaf:"function" = mean,
@@ -67,6 +68,9 @@ class DecisionTree:
         # Basic information
         self.dt:pd.DataFrame = data
         self.y:str = y
+        self.X:str = [col if col != self.y else None for col in self.dt.columns]
+        while None in self.X:
+            self.X.remove(None)
         self.__min_samples:int = min_samples
         self.len_dt:int = len(data)
         self.division:float = None
@@ -74,6 +78,7 @@ class DecisionTree:
         self.__depth:int = depth if depth != None else 0
         self.__max_depth:int = max_depth
         self.__print_:bool = print
+        self.__dt_with_y:pd.DataFrame = None # To smoothing tecnique
 
         # Sons
         self.ls:DecisionTree = None # Left Son
@@ -106,6 +111,7 @@ class DecisionTree:
                             "max_depth":self.__max_depth,
                             "loss_function":self.__function_loss,
                             "loss_calc":self.__calc_loss,
+                            "function_prediction_leaf":function_prediction_leaf,
                             "print":self.__print_,
                             "plot":self.plot,
                             "optimized":optimized,
@@ -129,7 +135,7 @@ class DecisionTree:
     def __repr__(self):
         return f"""
 DataFrame:
-    Columns of DataFrame: {', '.join((list(self.dt.columns)))}
+    Columns of DataFrame (X): {', '.join((list(self.X)))}
     y: {self.y}
     Len of Dataframe: {self.len_dt}
 
@@ -184,6 +190,30 @@ Output: {self.output}
             return self.__recursive_predict(X, memory_depth = memory_depth)
         else: # list
             return [self.__recursive_predict(X.iloc[i:i+1]) for i in range(len(X))]
+
+    def predict_smooth(self, X:pd.DataFrame) -> float or list:
+        """
+        ...
+        """
+        if self.__dt_with_y == None:
+            self.__dt_with_y:pd.DataFrame = self.dt.copy()
+            self.__dt_with_y["__dt_y__"] = self.predict(self.dt)
+
+        results:list = []
+        n_neighbors:int = len(self.X) + 1
+        for i in range(len(X)):
+            line_temporary = X[self.X].iloc[i]
+            
+            distances:float = np.linalg.norm(self.__dt_with_y[self.X].values - line_temporary.values, axis = 1)
+            nearest_indices = np.argsort(distances)[:n_neighbors]
+            n_distances:list = distances[nearest_indices]
+            
+            weights:list = [1/(1+distance) for distance in n_distances]
+            weights:list = [w/sum(weights) for w in weights]
+
+            results.append(sum([self.dt.iloc[k][self.y]*weights[index] for index, k in enumerate(nearest_indices)]))
+            
+        return results[0] if len(results) == 1 else results
 
     def train(self) -> None:
         """

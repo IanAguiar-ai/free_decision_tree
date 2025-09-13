@@ -70,6 +70,16 @@ You can also call the tree directly:
 prediction = tree(X_test)
 ```
 
+To predict with smoothing results:
+
+```python
+# Predict on new data
+X_test = pd.DataFrame({"x1": [2.5], "x2": [3.0]})
+prediction = tree.predict_smooth(X_test)
+
+print(prediction)  # Returns float or list of floats
+```
+
 ---
 function_prediction_leaf
 ### Plot tree

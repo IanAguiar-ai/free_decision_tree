@@ -3,6 +3,7 @@ if __name__ == "__main__":
     from sklearn.preprocessing import StandardScaler
     from free_decision_tree import DecisionTree
     import pandas as pd
+    import matplotlib.pyplot as plt
 
 ##    df = sns.load_dataset("titanic")  # ou "iris", "tips", "titanic", "penguins", etc.
 ##    df["sex"] = df["sex"].replace({"female": 0, "male": 1})
@@ -34,26 +35,26 @@ if __name__ == "__main__":
 ####
 
 ###########################################################################
-    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
-    df = df.drop(columns = ["species"])
-    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 5, min_samples = 2)
-    print(model)
-    model.plot_tree()
-    resp1 = model.plot_ci(test = df.iloc[140:])
-    model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
-    
-    
-    def simple_loss_2(y) -> float:
-        y_:float = y.mean()
-        return 1/len(y) * sum([abs(y_i - y_)*(y_i - y_) for y_i in y])
-
-    model = DecisionTree(data = df, y = "petal_length", max_depth = 5, min_samples = 2, loss_function = simple_loss_2)
-    print(model)
-    model.plot_tree()
-    resp2 = model.plot_ci()
-    model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
-
-    print(f"CI\t{resp1:0.04f}\n\t{resp2:0.04f}")
+##    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+##    df = df.drop(columns = ["species"])
+##    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 5, min_samples = 2)
+##    print(model)
+##    model.plot_tree()
+##    resp1 = model.plot_ci(test = df.iloc[140:])
+##    model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
+##    
+##    
+##    def simple_loss_2(y) -> float:
+##        y_:float = y.mean()
+##        return 1/len(y) * sum([abs(y_i - y_)*(y_i - y_) for y_i in y])
+##
+##    model = DecisionTree(data = df, y = "petal_length", max_depth = 5, min_samples = 2, loss_function = simple_loss_2)
+##    print(model)
+##    model.plot_tree()
+##    resp2 = model.plot_ci()
+##    model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
+##
+##    print(f"CI\t{resp1:0.04f}\n\t{resp2:0.04f}")
 
 ###########################################################################
 ##    from random import random
@@ -108,3 +109,16 @@ if __name__ == "__main__":
 ##    plt.figure(figsize = (10, 10))
 ##    plt.scatter(nd["x"], nd["y"], c = nd["depth"], alpha = 0.8)
 ##    plt.show()
+
+###########################################################################
+    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+    df = df.drop(columns = ["species", "petal_width"])
+    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 3, min_samples = 2)
+    #print(model)
+    y = model.predict_smooth(df)
+    print(set(sorted(y)))
+    #model.plot_tree()
+    plt.figure(figsize = (7, 7))
+    plt.scatter(df["sepal_length"], df["sepal_width"], c = y, alpha = 0.4)
+    plt.show()
+    
