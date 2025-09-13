@@ -121,4 +121,3 @@ if __name__ == "__main__":
     plt.figure(figsize = (7, 7))
     plt.scatter(df["sepal_length"], df["sepal_width"], c = y, alpha = 0.4)
     plt.show()
-    

@@ -78,7 +78,7 @@ class DecisionTree:
         self.__depth:int = depth if depth != None else 0
         self.__max_depth:int = max_depth
         self.__print_:bool = print
-        self.__dt_with_y:pd.DataFrame = None # To smoothing tecnique
+        self.__dt_with_y:pd.DataFrame = False # To smoothing tecnique
 
         # Sons
         self.ls:DecisionTree = None # Left Son
@@ -195,7 +195,7 @@ Output: {self.output}
         """
         ...
         """
-        if self.__dt_with_y == None:
+        if (type(self.__dt_with_y) == bool) and (self.__dt_with_y == False):
             self.__dt_with_y:pd.DataFrame = self.dt.copy()
             self.__dt_with_y["__dt_y__"] = self.predict(self.dt)
 
