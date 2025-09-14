@@ -90,7 +90,7 @@ Parameters:
 - **`X_test`** (`pd.DataFrame`): Input data for prediction.
 - **`n_neighbors`** (`int`, optional): Number of neighbors to consider; defaults to `len(features) + 1`.
 - **`alpha`** (`float`, default=`0.001`): Smoothing factor to stabilize weights.
-- **`beta`** (`float`, default=`0.001`): Regularization factor.
+- **`beta`** (`float`, default=`2`): Regularization factor.
 
 Returns:
 - A single float if one row is passed, or a list of floats otherwise.
