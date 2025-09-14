@@ -195,7 +195,7 @@ Output: {self.output}
         else: # list
             return [self.__recursive_predict(X.iloc[i:i+1], which_leaf = which_leaf) for i in range(len(X))]
 
-    def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.001, beta:float = 1, *, representatives:bool = False) -> float or list:
+    def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.001, beta:float = 1, representatives:bool = True) -> float or list:
         """
         ...
         """
@@ -217,7 +217,7 @@ Output: {self.output}
             weights:list = [1/(alpha+distance**beta) for distance in n_distances]
             weights:list = [w/sum(weights) for w in weights]
 
-            results.append(sum([self.dt.iloc[k][self.y]*weights[index] for index, k in enumerate(nearest_indices)]))
+            results.append(sum([self.__dt_with_y.iloc[k]["__dt_y__"]*weights[index] for index, k in enumerate(nearest_indices)]))
             
         return results[0] if len(results) == 1 else results
 

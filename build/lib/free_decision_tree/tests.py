@@ -152,7 +152,7 @@ def simple_loss_3(y:pd.DataFrame) -> float:
     y_:float = y.mean()
     return sum([(y_i - y_)**8 for y_i in y])
 
-model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 8, min_samples = 1,
+model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 5, min_samples = 1,
                       loss_function = simple_loss_3, loss_calc = lambda a, b : max(a, b))
 
 df_temp = df[df["year"] >= 1949]
@@ -160,7 +160,9 @@ X = [df_temp["month"].iloc[i]/12 + df_temp["year"].iloc[i] for i in range(len(df
 
 plt.figure(figsize = (14, 7))
 plt.plot(X, model3(df_temp), color = "orange", label = "Predito (Modelo 3)", alpha = 0.7)
-plt.plot(X, model3.predict_smooth(df_temp), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
+plt.plot(X, model3.predict_smooth(df_temp, representatives = False), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
+plt.plot(X, model3.predict_smooth(df_temp, representatives = True), color = "pink", linestyle = ":", label = "Predito (Modelo 3 com técnica de smooth e representative)", alpha = 0.7)
+
 
 plt.plot(X, df_temp["passengers"], color = "red", linestyle = "--", label = "Real")
 
