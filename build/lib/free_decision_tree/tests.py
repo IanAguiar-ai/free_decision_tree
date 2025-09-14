@@ -111,13 +111,23 @@ if __name__ == "__main__":
 ##    plt.show()
 
 ###########################################################################
-    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
-    df = df.drop(columns = ["species", "petal_width"])
-    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 3, min_samples = 2)
-    #print(model)
-    y = model.predict_smooth(df)
-    print(set(sorted(y)))
-    #model.plot_tree()
-    plt.figure(figsize = (7, 7))
-    plt.scatter(df["sepal_length"], df["sepal_width"], c = y, alpha = 0.4)
+##    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+##    df = df.drop(columns = ["species", "petal_width"])
+##    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 3, min_samples = 2)
+##    #print(model)
+##    y = model.predict_smooth(df)
+##    print(set(sorted(y)))
+##    #model.plot_tree()
+##    plt.figure(figsize = (7, 7))
+##    plt.scatter(df["sepal_length"], df["sepal_width"], c = y, alpha = 0.4)
+##    plt.show()
+
+###########################################################################
+    df = pd.DataFrame({"a":[0, 1, 0, 1], "b":[0, 0, 1, 1], "c":[0, 1, -1, 2]})
+    model = DecisionTree(data = df, y = "c", max_depth = 1, min_samples = 1)
+    
+    df_test = pd.DataFrame({"a":[(i/41)%1 for i in range(1000)], "b":[(i/67)%1 for i in range(1000)]})
+    y = model.predict_smooth(df_test, alpha = .001)
+    plt.figure(figsize = (6, 4))
+    plt.scatter(df_test["a"], df_test["b"], c = y, alpha = 1)
     plt.show()
