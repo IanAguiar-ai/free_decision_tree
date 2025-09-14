@@ -124,18 +124,48 @@ if __name__ == "__main__":
 ##    plt.show()
 
 ###########################################################################
-    seed(1)
-    df = pd.DataFrame({"a":[*[0, 1, 0, 1], *[1 + random()-0.5 for i in range(10)]],
-                       "b":[*[0, 0, 1, 1], *[1 + random()-0.5 for i in range(10)]],
-                       "c":[*[0, 1, -1, 2], *[2 + random()/10 for _ in range(10)]]})
-    model = DecisionTree(data = df, y = "c", max_depth = 2, min_samples = 1)
-    
-    df_test = pd.DataFrame({"a":[(i/41)%1 for i in range(1000)], "b":[(i/67)%1 for i in range(1000)]})
-    y = model.predict_smooth(df_test, alpha = .001)
-    plt.figure(figsize = (6, 4))
-    plt.scatter(df_test["a"], df_test["b"], c = y, alpha = 1)
-    plt.show()
-    model.plot_tree()
+##    seed(1)
+##    df = pd.DataFrame({"a":[*[0, 1, 0, 1], *[1 + random()-0.5 for i in range(10)]],
+##                       "b":[*[0, 0, 1, 1], *[1 + random()-0.5 for i in range(10)]],
+##                       "c":[*[0, 1, -1, 2], *[2 + random()/10 for _ in range(10)]]})
+##    model = DecisionTree(data = df, y = "c", max_depth = 2, min_samples = 1)
+##    
+##    df_test = pd.DataFrame({"a":[(i/41)%1 for i in range(1000)], "b":[(i/67)%1 for i in range(1000)]})
+##    y = model.predict_smooth(df_test, alpha = .001)
+##    plt.figure(figsize = (6, 4))
+##    plt.scatter(df_test["a"], df_test["b"], c = y, alpha = 1)
+##    plt.show()
+##    model.plot_tree()
+##
+##    df_ = model.detect_depth()
+##    print(df_)
 
-    df_ = model.detect_depth()
-    print(df_)
+###########################################################################
+df = sns.load_dataset("flights")  # ou "tips", "titanic", "penguins", etc.
+meses:list = [mes for mes in df["month"].iloc[:12]]
+df["month"] = df["month"].replace({mes:int(i+1) for i, mes in enumerate(meses)})
+df["month"] = df["month"].astype(int)
+
+print(df)
+
+def simple_loss_3(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return sum([(y_i - y_)**8 for y_i in y])
+
+model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 8, min_samples = 1,
+                      loss_function = simple_loss_3, loss_calc = lambda a, b : max(a, b))
+
+df_temp = df[df["year"] >= 1949]
+X = [df_temp["month"].iloc[i]/12 + df_temp["year"].iloc[i] for i in range(len(df_temp))]
+
+plt.figure(figsize = (14, 7))
+plt.plot(X, model3(df_temp), color = "orange", label = "Predito (Modelo 3)", alpha = 0.7)
+plt.plot(X, model3.predict_smooth(df_temp), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
+
+plt.plot(X, df_temp["passengers"], color = "red", linestyle = "--", label = "Real")
+
+plt.xlabel("Ano")
+plt.ylabel("Passageiros")
+plt.grid()
+plt.legend()
+plt.show()

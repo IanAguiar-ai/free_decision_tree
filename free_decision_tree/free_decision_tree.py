@@ -195,13 +195,15 @@ Output: {self.output}
         else: # list
             return [self.__recursive_predict(X.iloc[i:i+1], which_leaf = which_leaf) for i in range(len(X))]
 
-    def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.001) -> float or list:
+    def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.001, beta:float = 1, *, representatives:bool = False) -> float or list:
         """
         ...
         """
         if (type(self.__dt_with_y) == bool) and (self.__dt_with_y == False):
             self.__dt_with_y:pd.DataFrame = self.detect_depth()
-            self.__dt_with_y:pd.DataFrame = self.__dt_with_y[[*self.X, self.y, "__dt_y__", "__dt_leaf__"]].groupby("__dt_leaf__").mean()
+            if representatives:
+                self.__dt_with_y:pd.DataFrame = self.__dt_with_y[[*self.X, "__dt_y__", "__dt_leaf__"]].groupby("__dt_leaf__").mean()
+            self.__dt_with_y:pd.DataFrame = self.__dt_with_y.reset_index(drop = True)
             print(self.__dt_with_y)
 
         results:list = []
@@ -213,7 +215,7 @@ Output: {self.output}
             nearest_indices = np.argsort(distances)[:n_neighbors]
             n_distances:list = distances[nearest_indices]
             
-            weights:list = [1/(alpha+distance) for distance in n_distances]
+            weights:list = [1/(alpha+distance**beta) for distance in n_distances]
             weights:list = [w/sum(weights) for w in weights]
 
             results.append(sum([self.dt.iloc[k][self.y]*weights[index] for index, k in enumerate(nearest_indices)]))
