@@ -204,7 +204,6 @@ Output: {self.output}
             if representatives:
                 self.__dt_with_y:pd.DataFrame = self.__dt_with_y[[*self.X, "__dt_y__", "__dt_leaf__"]].groupby("__dt_leaf__").mean()
             self.__dt_with_y:pd.DataFrame = self.__dt_with_y.reset_index(drop = True)
-            print(self.__dt_with_y)
 
         results:list = []
         n_neighbors:int = len(self.X) + 1 if n_neighbors == None else n_neighbors

@@ -109,11 +109,95 @@ Parameters:
 - **`X_test`** (`pd.DataFrame`): Input data for prediction.
 - **`n_neighbors`** (`int`, optional): Number of neighbors to consider; defaults to `len(features) + 1`.
 - **`alpha`** (`float`, default=`0.001`): Smoothing factor to stabilize weights.
+- **`beta`** (`float`, default=`0.001`): Regularization factor.
 
 Returns:
 - A single float if one row is passed, or a list of floats otherwise.
 
 This method is recommended when predictions should be less sensitive to sharp splits of the tree, approximating a smoother regression surface.
+
+Formula:
+
+$$ f(X) = \frac{ \sum_{i}^{len(X)} \left( \frac{1}{\alpha + \min_j \left( Distance(\hat{X_j}, X_i) \right)^{\beta}} \cdot \hat{y}_i \right)}{\sum_{i}^{len(X)} \frac{1}{\alpha + \min_j \left( Distance(\hat{X_j}, X_i) \right)^{\beta}}} $$
+
+Example:
+
+```python
+import pandas as pd
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+
+df = sns.load_dataset("flights")  # ou "tips", "titanic", "penguins", etc.
+meses:list = [mes for mes in df["month"].iloc[:12]]
+df["month"] = df["month"].replace({mes:int(i+1) for i, mes in enumerate(meses)})
+df["month"] = df["month"].astype(int)
+
+def simple_loss_1(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return 1/len(y) * sum([(y_i - y_)*(y_i - y_) for y_i in y])
+
+model = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 4,
+                     loss_function = simple_loss_1, loss_calc = lambda a, b : max(a, b))
+                     
+def simple_loss_2(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return sum([(y_i - y_)*(y_i - y_) for y_i in y])
+
+model2 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 4, loss_calc = lambda a, b : a + b, loss_function = simple_loss_2)
+
+def simple_loss_3(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return sum([(y_i - y_)**8 for y_i in y])
+
+model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 4, min_samples = 1,
+                      loss_function = simple_loss_3, loss_calc = lambda a, b : max(a, b))
+                      
+import matplotlib.pyplot as plt
+
+df_temp = df[df["year"] >= 1949]
+X = [df_temp["month"].iloc[i]/12 + df_temp["year"].iloc[i] for i in range(len(df_temp))]
+
+plt.figure(figsize = (14, 7))
+plt.plot(X, model(df_temp), color = "blue", label = "Predito (Modelo 1)", alpha = 0.7)
+plt.plot(X, model2(df_temp), color = "green", label = "Predito (Modelo 2)", alpha = 0.7)
+plt.plot(X, model3(df_temp), color = "orange", label = "Predito (Modelo 3)", alpha = 0.7)
+plt.plot(X, model3.predict_smooth(df_temp), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
+
+plt.plot(X, df_temp["passengers"], color = "red", linestyle = "--", label = "Real")
+
+plt.xlabel("Ano")
+plt.ylabel("Passageiros")
+plt.grid()
+plt.legend()
+plt.show()
+```
+
+![ex_plot_smooth_1](images/example_3.png)
+
+
+```python
+import matplotlib.pyplot as plt
+
+dt = pd.DataFrame({"a":[0, .5, 1],
+                   "b":[0, .5, 1]})
+
+model = DecisionTree(data = dt, y = "b", max_depth = 2, min_samples = 1)
+
+dt_test = pd.DataFrame({"a":[i/100 for i in range(101)]})
+
+y_ = model.predict(dt_test)
+
+
+plt.figure(figsize = (10, 6))
+plt.plot(dt_test["a"], y_, label = "Predição normal")
+for beta in [0.5, 1, 2, 4]:
+  y_ = model.predict_smooth(dt_test, beta = beta)
+  plt.plot(dt_test["a"], y_, label = f"Predição com smoothing e beta = {beta}")
+plt.legend()
+plt.show()
+```
+
+![ex_plot_smooth_2](images/example_2.png)
 
 ---
 
@@ -143,6 +227,50 @@ tree.plot_tree()
 
 Generates a visual representation of the decision tree, with splits, sample counts, losses, and outputs at each node.
 
+Example:
+
+```python
+import pandas as pd
+import seaborn as sns
+
+df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+df = df.drop(columns = ["species"])
+
+model = DecisionTree(data = df, y = "petal_length", max_depth = 3, min_samples = 2)
+print(model)
+```
+
+```
+DataFrame:
+    Columns of DataFrame (X): sepal_length, sepal_width, petal_width
+    y: petal_length
+    Len of Dataframe: 150
+
+Values:
+    Depth: root
+    Division in: petal_width
+    In value: <= 0.6
+    Self loss: 464.32540000000046
+    Loss in division: 68.95420000000001
+
+Variables:
+    Min Samples: 2
+    Max Depth: 3
+    optimized: False
+
+Functions:
+    Loss Function: simple_loss
+    Join Loss: calc_loss
+
+Output: 3.7580000000000005
+```
+
+```python
+model.plot_tree()
+```
+
+![ex_plot_tree_1](images/example_1.png)
+
 ---
 
 ### Plot sensitivity
@@ -167,6 +295,21 @@ tree.plot_ci(test=df, y="y", confidence=0.95)
 
 Generates a scatter plot of predicted vs. real values with confidence intervals.
 Returns the approximate confidence error value (`float`).
+
+Example:
+
+```python
+import pandas as pd
+import seaborn as sns
+
+df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+df = df.drop(columns = ["species"])
+
+model = DecisionTree(data = df, y = "petal_length", max_depth = 3, min_samples = 2)
+model.plot_ci()
+```
+
+![ex_plot_ci_1](images/example_4.png)
 
 ---
 
