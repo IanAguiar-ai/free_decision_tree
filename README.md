@@ -70,18 +70,52 @@ You can also call the tree directly:
 prediction = tree(X_test)
 ```
 
-To predict with smoothing results:
+---
+
+### Predict smooth
 
 ```python
-# Predict on new data
-X_test = pd.DataFrame({"x1": [2.5], "x2": [3.0]})
-prediction = tree.predict_smooth(X_test)
-
-print(prediction)  # Returns float or list of floats
+tree.predict_smooth(X_test, n_neighbors=None, alpha=0.001)
 ```
 
+Performs prediction with a **smoothing technique based on nearest neighbors** of the leaves.
+Instead of returning only the raw leaf output, it:
+
+1. Calls `detect_depth()` (if not already computed) to build a table of leaves and their average positions/outputs.
+2. For each row in `X_test`, computes the Euclidean distance to each averaged leaf centroid.
+3. Selects the *n_neighbors* closest leaves (default = number of features + 1).
+4. Applies distance-weighted averaging using parameter `alpha` to avoid division by zero.
+
+Parameters:
+- **`X_test`** (`pd.DataFrame`): Input data for prediction.
+- **`n_neighbors`** (`int`, optional): Number of neighbors to consider; defaults to `len(features) + 1`.
+- **`alpha`** (`float`, default=`0.001`): Smoothing factor to stabilize weights.
+
+Returns:
+- A single float if one row is passed, or a list of floats otherwise.
+
+This method is recommended when predictions should be less sensitive to sharp splits of the tree, approximating a smoother regression surface.
+
 ---
-function_prediction_leaf
+
+### Detect depth
+
+```python
+tree.detect_depth()
+```
+
+Generates a new `DataFrame` containing metadata about each sample in the training set:
+- **`__dt_depth__`**: the depth of the node in which the sample ended up.
+- **`__dt_leaf__`**: the identifier of the leaf reached by the sample.
+- **`__dt_y__`**: the predicted output value for the sample.
+
+This is useful to analyze how samples are distributed across the tree, debug overfitting, or prepare structures for smoothing techniques.
+
+Returns:
+- A copy of the training `DataFrame` with the additional diagnostic columns.
+
+---
+
 ### Plot tree
 
 ```python

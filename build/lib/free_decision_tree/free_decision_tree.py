@@ -158,7 +158,7 @@ Functions:
 Output: {self.output}
 """
 
-    def __recursive_predict(self, X:pd.DataFrame, *, memory_depth = None) -> float:
+    def __recursive_predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None) -> float:
         """
         ...
         """        
@@ -168,18 +168,22 @@ Output: {self.output}
         self.__print(f"Depth: {self.__depth}, Len: {self.len_dt} | {self.division} <= ({self.variable_division})? {X[self.variable_division].iloc[0]}", end = " ")
         if X[self.variable_division].iloc[0] <= self.division:
             self.__print(f"<--")
+##            if which_leaf != None:
+##                which_leaf[0] += 2**memory_depth[0]*0
             if self.ls != None:
-                return self.ls.predict(X, memory_depth = memory_depth)
+                return self.ls.predict(X, memory_depth = memory_depth, which_leaf = which_leaf)
             else:
                 return self.output
         else:
             self.__print(f"-->")
+            if which_leaf != None:
+                which_leaf[0] += 2**memory_depth[0]
             if self.rs != None:
-                return self.rs.predict(X, memory_depth = memory_depth)
+                return self.rs.predict(X, memory_depth = memory_depth, which_leaf = which_leaf)
             else:
                 return self.output
 
-    def predict(self, X:pd.DataFrame, *, memory_depth = None) -> float or list:
+    def predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None) -> float or list:
         """
         ...
         """
@@ -187,17 +191,18 @@ Output: {self.output}
             memory_depth[0] += 1
 
         if len(X) == 1: # float
-            return self.__recursive_predict(X, memory_depth = memory_depth)
+            return self.__recursive_predict(X, memory_depth = memory_depth, which_leaf = which_leaf)
         else: # list
-            return [self.__recursive_predict(X.iloc[i:i+1]) for i in range(len(X))]
+            return [self.__recursive_predict(X.iloc[i:i+1], which_leaf = which_leaf) for i in range(len(X))]
 
     def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.001) -> float or list:
         """
         ...
         """
         if (type(self.__dt_with_y) == bool) and (self.__dt_with_y == False):
-            self.__dt_with_y:pd.DataFrame = self.dt.copy()
-            self.__dt_with_y["__dt_y__"] = self.predict(self.dt)
+            self.__dt_with_y:pd.DataFrame = self.detect_depth()
+            self.__dt_with_y:pd.DataFrame = self.__dt_with_y[[*self.X, self.y, "__dt_y__", "__dt_leaf__"]].groupby("__dt_leaf__").mean()
+            print(self.__dt_with_y)
 
         results:list = []
         n_neighbors:int = len(self.X) + 1 if n_neighbors == None else n_neighbors
@@ -288,13 +293,18 @@ Output: {self.output}
         ...
         """
         temporary_depth:list = []
+        temporary_leaf:list = []
         for i in range(len(self.dt)):
             memory_depth:list = [-1]
-            self.predict(self.dt.iloc[i:i+1], memory_depth = memory_depth)
+            which_leaf:list = [0]
+            self.predict(self.dt.iloc[i:i+1], memory_depth = memory_depth, which_leaf = which_leaf)
             temporary_depth.append(memory_depth[0])
+            temporary_leaf.append(which_leaf[0])
 
         df_temporary:pd.DataFrame = self.dt.copy()
-        df_temporary["depth"] = temporary_depth
+        df_temporary["__dt_depth__"] = temporary_depth
+        df_temporary["__dt_leaf__"] = temporary_leaf
+        df_temporary["__dt_y__"] = self.predict(self.dt)
         return df_temporary        
 
     def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
@@ -419,4 +429,3 @@ Output: {self.output}
         plt.tight_layout()
         plt.show()
         return confidence_value
-        

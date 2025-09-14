@@ -4,6 +4,7 @@ if __name__ == "__main__":
     from free_decision_tree import DecisionTree
     import pandas as pd
     import matplotlib.pyplot as plt
+    from random import random, seed
 
 ##    df = sns.load_dataset("titanic")  # ou "iris", "tips", "titanic", "penguins", etc.
 ##    df["sex"] = df["sex"].replace({"female": 0, "male": 1})
@@ -107,7 +108,7 @@ if __name__ == "__main__":
 ##    print(nd)
 ##
 ##    plt.figure(figsize = (10, 10))
-##    plt.scatter(nd["x"], nd["y"], c = nd["depth"], alpha = 0.8)
+##    plt.scatter(nd["x"], nd["y"], c = nd["__dt_depth__"], alpha = 0.8)
 ##    plt.show()
 
 ###########################################################################
@@ -123,11 +124,18 @@ if __name__ == "__main__":
 ##    plt.show()
 
 ###########################################################################
-    df = pd.DataFrame({"a":[0, 1, 0, 1], "b":[0, 0, 1, 1], "c":[0, 1, -1, 2]})
-    model = DecisionTree(data = df, y = "c", max_depth = 1, min_samples = 1)
+    seed(1)
+    df = pd.DataFrame({"a":[*[0, 1, 0, 1], *[1 + random()-0.5 for i in range(10)]],
+                       "b":[*[0, 0, 1, 1], *[1 + random()-0.5 for i in range(10)]],
+                       "c":[*[0, 1, -1, 2], *[2 + random()/10 for _ in range(10)]]})
+    model = DecisionTree(data = df, y = "c", max_depth = 2, min_samples = 1)
     
     df_test = pd.DataFrame({"a":[(i/41)%1 for i in range(1000)], "b":[(i/67)%1 for i in range(1000)]})
     y = model.predict_smooth(df_test, alpha = .001)
     plt.figure(figsize = (6, 4))
     plt.scatter(df_test["a"], df_test["b"], c = y, alpha = 1)
     plt.show()
+    model.plot_tree()
+
+    df_ = model.detect_depth()
+    print(df_)
