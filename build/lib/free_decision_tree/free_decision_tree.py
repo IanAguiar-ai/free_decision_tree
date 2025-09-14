@@ -195,7 +195,7 @@ Output: {self.output}
         else: # list
             return [self.__recursive_predict(X.iloc[i:i+1], which_leaf = which_leaf) for i in range(len(X))]
 
-    def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.001, beta:float = 1, representatives:bool = True) -> float or list:
+    def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.001, beta:float = 2, representatives:bool = True) -> float or list:
         """
         ...
         """
