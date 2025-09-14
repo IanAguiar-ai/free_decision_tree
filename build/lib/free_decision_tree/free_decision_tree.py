@@ -220,6 +220,7 @@ Output: {self.output}
         ...
         """
         self.plot.load()
+        self.__dt_with_y:pd.DataFrame = False # To smoothing tecnique
         
         self.__print(f"Train:\n\tDepth: {self.__depth} | Lenth: {self.len_dt}")
         if (self.len_dt < 2*self.__min_samples) or (self.__depth >= self.__max_depth):
