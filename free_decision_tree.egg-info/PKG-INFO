@@ -107,9 +107,9 @@ Instead of returning only the raw leaf output, it:
 
 Parameters:
 - **`X_test`** (`pd.DataFrame`): Input data for prediction.
-- **`n_neighbors`** (`int`, optional): Number of neighbors to consider; defaults to `len(features) + 1`.
+- **`n_neighbors`** (`int`, optional): Number of neighbors to consider; defaults to `len(leafs)`.
 - **`alpha`** (`float`, default=`0.001`): Smoothing factor to stabilize weights.
-- **`beta`** (`float`, default=`0.001`): Regularization factor.
+- **`beta`** (`float`, default=`2`): Regularization factor.
 
 Returns:
 - A single float if one row is passed, or a list of floats otherwise.
@@ -198,6 +198,54 @@ plt.show()
 ```
 
 ![ex_plot_smooth_2](images/example_2.png)
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from random import random, seed
+import numpy as np
+
+
+# Dados
+seed(1)
+df = pd.DataFrame({"a": [*[0, 1, 0, 1], *[1 + random() - 0.5 for _ in range(10)]],
+                   "b": [*[0, 0, 1, 1], *[1 + random() - 0.5 for _ in range(10)]],
+                   "c": [*[0, 1, -1, 2], *[2 + random() / 10 for _ in range(10)]]})
+
+model = DecisionTree(data = df, y = "c", max_depth = 2, min_samples = 1)
+model.plot_tree()
+
+df_test = pd.DataFrame({"a": [(i / 101) % 2 - 1 for i in range(5000)],
+                        "b": [(i / 107) % 2 - 1for i in range(5000)]})
+
+def plot_3d(df, y, title):
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(df["a"], df["b"], y, c=y, cmap='viridis', alpha=0.8)
+    ax.set_xlabel("a")
+    ax.set_ylabel("b")
+    ax.set_zlabel("Predição")
+    ax.set_title(title)
+    plt.show()
+
+y = model.predict(df_test)
+plot_3d(df_test, y, "Decision Tree")
+
+y = model.predict_smooth(df_test, beta=1, representatives = True)
+plot_3d(df_test, y, "Decision Tree Smooth (beta = 1)")
+
+y = model.predict_smooth(df_test, beta=2, representatives = True)
+plot_3d(df_test, y, "Decision Tree Smooth (beta = 2)")
+```
+
+![ex_plot_smooth_3](images/example_5.png)
+
+![ex_plot_smooth_3](images/example_6.png)
+
+![ex_plot_smooth_3](images/example_7.png)
+
+![ex_plot_smooth_3](images/example_8.png)
 
 ---
 

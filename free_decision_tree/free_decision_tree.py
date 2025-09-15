@@ -206,7 +206,7 @@ Output: {self.output}
             self.__dt_with_y:pd.DataFrame = self.__dt_with_y.reset_index(drop = True)
 
         results:list = []
-        n_neighbors:int = len(self.X) + 1 if n_neighbors == None else n_neighbors
+        n_neighbors:int = len(self.__dt_with_y) if n_neighbors == None else n_neighbors #len(self.X) + 1 if n_neighbors == None else n_neighbors
         for i in range(len(X)):
             line_temporary = X[self.X].iloc[i]
             
