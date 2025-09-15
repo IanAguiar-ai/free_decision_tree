@@ -142,7 +142,7 @@ plt.figure(figsize = (14, 7))
 plt.plot(X, model(df_temp), color = "blue", label = "Predito (Modelo 1)", alpha = 0.7)
 plt.plot(X, model2(df_temp), color = "green", label = "Predito (Modelo 2)", alpha = 0.7)
 plt.plot(X, model3(df_temp), color = "orange", label = "Predito (Modelo 3)", alpha = 0.7)
-plt.plot(X, model3.predict_smooth(df_temp), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
+plt.plot(X, model3.predict_smooth(df_temp, n_neighbors = 3), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
 
 plt.plot(X, df_temp["passengers"], color = "red", linestyle = "--", label = "Real")
 
