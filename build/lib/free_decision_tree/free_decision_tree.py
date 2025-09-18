@@ -1,8 +1,14 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 from time import time
 from math import log
+
+# To export and import
+import pickle
+from pathlib import Path
+
+# Others
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
@@ -306,7 +312,27 @@ Output: {self.output}
         df_temporary["__dt_depth__"] = temporary_depth
         df_temporary["__dt_leaf__"] = temporary_leaf
         df_temporary["__dt_y__"] = self.predict(self.dt)
-        return df_temporary        
+        return df_temporary
+
+    def save(self, path:str) -> None:
+        """
+        Saves the complete tree.
+        """
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with open(p, "wb") as f:
+            pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, path: str) -> "DecisionTree":
+        """
+        Loads and returns a tree previously saved by DecisionTree.save().
+        """
+        with open(path, "rb") as f:
+            obj = pickle.load(f)
+        if not isinstance(obj, cls):
+            raise TypeError("The file does not contain a DecisionTree instance.")
+        return obj
 
     def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
         """

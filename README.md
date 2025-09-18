@@ -4,6 +4,16 @@ A customizable implementation of decision trees for regression, written from scr
 
 ---
 
+## Updates
+
+- **0.0.4**
+    - Smooth prediction.
+
+- **0.0.5**
+    - Save and load function.
+
+---
+
 ## Download
 
 ```bash
@@ -245,6 +255,48 @@ This is useful to analyze how samples are distributed across the tree, debug ove
 
 Returns:
 - A copy of the training `DataFrame` with the additional diagnostic columns.
+
+---
+
+### Save and Load DecisionTree
+
+To save:
+
+```python
+your_model.plot_tree(string_name_to_save)
+```
+
+To load:
+
+```python
+new_model:DecisionTree = DecisionTree.plot_tree(string_name_to_save)
+```
+
+Example:
+
+```python
+from free_decision_tree import DecisionTree
+import seaborn as sns
+import pandas as pd
+    
+df = sns.load_dataset("flights")  # ou "tips", "titanic", "penguins", etc.
+meses:list = [mes for mes in df["month"].iloc[:12]]
+df["month"] = df["month"].replace({mes:int(i+1) for i, mes in enumerate(meses)})
+df["month"] = df["month"].astype(int)
+
+def simple_loss_3(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return sum([(y_i - y_)**8 for y_i in y])
+
+model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 5, min_samples = 1,
+                      loss_function = simple_loss_3)
+model3.plot_tree()
+
+model3.save("test")
+
+new_model = DecisionTree.load("test")
+new_model.plot_tree()
+```
 
 ---
 

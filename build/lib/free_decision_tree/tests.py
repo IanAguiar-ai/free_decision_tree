@@ -141,6 +141,38 @@ if __name__ == "__main__":
 ##    print(df_)
 
 ###########################################################################
+##df = sns.load_dataset("flights")  # ou "tips", "titanic", "penguins", etc.
+##meses:list = [mes for mes in df["month"].iloc[:12]]
+##df["month"] = df["month"].replace({mes:int(i+1) for i, mes in enumerate(meses)})
+##df["month"] = df["month"].astype(int)
+##
+##print(df)
+##
+##def simple_loss_3(y:pd.DataFrame) -> float:
+##    y_:float = y.mean()
+##    return sum([(y_i - y_)**8 for y_i in y])
+##
+##model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 5, min_samples = 1,
+##                      loss_function = simple_loss_3, loss_calc = lambda a, b : max(a, b))
+##
+##df_temp = df[df["year"] >= 1949]
+##X = [df_temp["month"].iloc[i]/12 + df_temp["year"].iloc[i] for i in range(len(df_temp))]
+##
+##plt.figure(figsize = (14, 7))
+##plt.plot(X, model3(df_temp), color = "orange", label = "Predito (Modelo 3)", alpha = 0.7)
+##plt.plot(X, model3.predict_smooth(df_temp, representatives = False, n_neighbors = 3), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
+##plt.plot(X, model3.predict_smooth(df_temp, representatives = True, n_neighbors = 3), color = "pink", linestyle = ":", label = "Predito (Modelo 3 com técnica de smooth e representative)", alpha = 0.7)
+##
+##
+##plt.plot(X, df_temp["passengers"], color = "red", linestyle = "--", label = "Real")
+##
+##plt.xlabel("Ano")
+##plt.ylabel("Passageiros")
+##plt.grid()
+##plt.legend()
+##plt.show()
+
+###########################################################################
 df = sns.load_dataset("flights")  # ou "tips", "titanic", "penguins", etc.
 meses:list = [mes for mes in df["month"].iloc[:12]]
 df["month"] = df["month"].replace({mes:int(i+1) for i, mes in enumerate(meses)})
@@ -153,21 +185,12 @@ def simple_loss_3(y:pd.DataFrame) -> float:
     return sum([(y_i - y_)**8 for y_i in y])
 
 model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 5, min_samples = 1,
-                      loss_function = simple_loss_3, loss_calc = lambda a, b : max(a, b))
-
-df_temp = df[df["year"] >= 1949]
-X = [df_temp["month"].iloc[i]/12 + df_temp["year"].iloc[i] for i in range(len(df_temp))]
-
-plt.figure(figsize = (14, 7))
-plt.plot(X, model3(df_temp), color = "orange", label = "Predito (Modelo 3)", alpha = 0.7)
-plt.plot(X, model3.predict_smooth(df_temp, representatives = False), color = "purple", linestyle = "--", label = "Predito (Modelo 3 com técnica de smooth)", alpha = 0.7)
-plt.plot(X, model3.predict_smooth(df_temp, representatives = True), color = "pink", linestyle = ":", label = "Predito (Modelo 3 com técnica de smooth e representative)", alpha = 0.7)
+                      loss_function = simple_loss_3)
 
 
-plt.plot(X, df_temp["passengers"], color = "red", linestyle = "--", label = "Real")
+model3.plot_tree()
 
-plt.xlabel("Ano")
-plt.ylabel("Passageiros")
-plt.grid()
-plt.legend()
-plt.show()
+model3.save("test")
+
+new_model = DecisionTree.load("test")
+new_model.plot_tree()
