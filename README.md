@@ -266,13 +266,13 @@ Returns:
 To save:
 
 ```python
-your_model.plot_tree(string_name_to_save)
+your_model.save(string_name_to_save)
 ```
 
 To load:
 
 ```python
-new_model:DecisionTree = DecisionTree.plot_tree(string_name_to_save)
+new_model:DecisionTree = DecisionTree.load(string_name_to_save)
 ```
 
 Example:
