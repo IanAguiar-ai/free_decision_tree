@@ -114,6 +114,7 @@ $$ f(X) = \frac{ \sum_{i}^{len(X)} \left( \frac{1}{\alpha + \min_j \left( Distan
 Example:
 
 ```python
+from free_decision_tree import DecisionTree
 import pandas as pd
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
@@ -167,6 +168,7 @@ plt.show()
 
 
 ```python
+from free_decision_tree import DecisionTree
 import matplotlib.pyplot as plt
 
 dt = pd.DataFrame({"a":[0, .5, 1],
@@ -191,6 +193,7 @@ plt.show()
 ![ex_plot_smooth_2](images/example_2.png)
 
 ```python
+from free_decision_tree import DecisionTree
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -311,6 +314,7 @@ Generates a visual representation of the decision tree, with splits, sample coun
 Example:
 
 ```python
+from free_decision_tree import DecisionTree
 import pandas as pd
 import seaborn as sns
 
@@ -380,6 +384,7 @@ Returns the approximate confidence error value (`float`).
 Example:
 
 ```python
+from free_decision_tree import DecisionTree
 import pandas as pd
 import seaborn as sns
 
