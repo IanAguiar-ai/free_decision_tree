@@ -191,7 +191,13 @@ Output: {self.output}
 
     def predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None) -> float or list:
         """
-        ...
+        Predict outputs for one or multiple samples.
+
+        Args:
+            X (pd.DataFrame): Input features. Can be one row or multiple rows.
+
+        Returns:
+            float or list: Predicted value for a single row or list of values for multiple rows.
         """
         if memory_depth != None:
             memory_depth[0] += 1
@@ -203,7 +209,17 @@ Output: {self.output}
 
     def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.00001, beta:float = 2, representatives:bool = True) -> float or list:
         """
-        ...
+        Predict using a smoothed approximation based on nearest neighbors of tree leaves.
+
+        Args:
+            X (pd.DataFrame): Input features.
+            n_neighbors (int, optional): Number of neighbors to consider. Defaults to all.
+            alpha (float, optional): Small constant to avoid division by zero in weights.
+            beta (float, optional): Exponent applied to distances in weight calculation.
+            representatives (bool, optional): If True, use mean representatives of each leaf.
+
+        Returns:
+            float or list: Smoothed prediction for one or multiple samples.
         """
         if (type(self.__dt_with_y) == bool) and (self.__dt_with_y == False):
             self.__dt_with_y:pd.DataFrame = self.detect_depth()
@@ -229,7 +245,7 @@ Output: {self.output}
 
     def train(self) -> None:
         """
-        ...
+        Train the decision tree recursively by splitting nodes.
         """
         self.plot.load()
         self.__dt_with_y:pd.DataFrame = False # To smoothing tecnique
@@ -318,16 +334,18 @@ Output: {self.output}
         """
         Saves the complete tree.
         """
-        p = Path(path)
+        p = Path(path + ".decisiontree")
         p.parent.mkdir(parents=True, exist_ok=True)
         with open(p, "wb") as f:
             pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     @classmethod
-    def load(cls, path: str) -> "DecisionTree":
+    def load(cls, path:str) -> "DecisionTree":
         """
         Loads and returns a tree previously saved by DecisionTree.save().
         """
+        if not ".decisiontree" in path:
+            path += ".decisiontree"
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):
@@ -336,7 +354,19 @@ Output: {self.output}
 
     def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
         """
-        ...
+        Plot the tree structure.
+
+        Args:
+            ax (matplotlib.axes.Axes, optional): Existing axis to draw on.
+            x (float): Horizontal position of the current node.
+            y (float): Vertical position of the current node.
+            dx (float): Horizontal distance between parent and children.
+            dy (float): Vertical distance between levels.
+            figsize (tuple, optional): Figure size if a new plot is created.
+            fontsize (int, optional): Font size for node labels.
+
+        Returns:
+            None
         """
         if figsize == None:
             figsize = (3 + 2**(self.__max_depth), 2*self.__max_depth)
@@ -381,8 +411,16 @@ Output: {self.output}
 
     def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None) -> int:
         """
-        ...
-        """
+        Evaluate tree depth sensitivity by measuring MSE on train and test sets.
+
+        Args:
+            train (pd.DataFrame): Training dataset.
+            test (pd.DataFrame): Testing dataset.
+            y (str, optional): Target column. Defaults to self.y.
+
+        Returns:
+            int: Best depth (minimum MSE on test set).
+            """
         if y == None:
             y:str = self.y
             
@@ -421,7 +459,16 @@ Output: {self.output}
 
     def plot_ci(self, test:pd.DataFrame = False, y:str = None, figsize:tuple = (5, 6), confidence:float = 0.95) -> float:
         """
-        ...
+        Plot confidence interval of model predictions.
+
+        Args:
+            test (pd.DataFrame, optional): Test dataset. Defaults to training data.
+            y (str, optional): Target column. Defaults to self.y.
+            figsize (tuple, optional): Figure size.
+            confidence (float, optional): Confidence level (0-1). Defaults to 0.95.
+
+        Returns:
+            float: Confidence value (approximate error bound).
         """
         def _confidence(real:list, expected:list, interval:float = 0.95) -> float:
             diferences:list = sorted([abs(real_i - expected_i) for real_i, expected_i in zip(real, expected)])
