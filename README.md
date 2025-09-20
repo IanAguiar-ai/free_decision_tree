@@ -11,6 +11,10 @@ A customizable implementation of decision trees for regression, written from scr
 
 - **0.0.5**
     - Save and load function.
+    
+- **0.0.6**
+    - Faster plot_sensitivity.
+
 
 ---
 

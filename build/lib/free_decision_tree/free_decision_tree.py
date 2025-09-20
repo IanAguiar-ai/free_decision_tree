@@ -164,10 +164,12 @@ Functions:
 Output: {self.output}
 """
 
-    def __recursive_predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None) -> float:
+    def __recursive_predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None, max_depth = None) -> float:
         """
         ...
-        """        
+        """
+        if (max_depth != None) and (max_depth <= memory_depth[0]):
+            return self.output
         if (self.division == None) or (self.variable_division == None):
             return self.output
 
@@ -177,7 +179,7 @@ Output: {self.output}
 ##            if which_leaf != None:
 ##                which_leaf[0] += 2**memory_depth[0]*0
             if self.ls != None:
-                return self.ls.predict(X, memory_depth = memory_depth, which_leaf = which_leaf)
+                return self.ls.predict(X, memory_depth = memory_depth, which_leaf = which_leaf, max_depth = max_depth)
             else:
                 return self.output
         else:
@@ -185,11 +187,11 @@ Output: {self.output}
             if which_leaf != None:
                 which_leaf[0] += 2**memory_depth[0]
             if self.rs != None:
-                return self.rs.predict(X, memory_depth = memory_depth, which_leaf = which_leaf)
+                return self.rs.predict(X, memory_depth = memory_depth, which_leaf = which_leaf, max_depth = max_depth)
             else:
                 return self.output
 
-    def predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None) -> float or list:
+    def predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None, max_depth:int = None) -> float or list:
         """
         Predict outputs for one or multiple samples.
 
@@ -203,9 +205,10 @@ Output: {self.output}
             memory_depth[0] += 1
 
         if len(X) == 1: # float
-            return self.__recursive_predict(X, memory_depth = memory_depth, which_leaf = which_leaf)
+            return self.__recursive_predict(X, memory_depth = memory_depth, which_leaf = which_leaf, max_depth = max_depth)
         else: # list
-            return [self.__recursive_predict(X.iloc[i:i+1], which_leaf = which_leaf) for i in range(len(X))]
+            return [self.__recursive_predict(X.iloc[i:i+1], memory_depth = [0] if memory_depth == None else memory_depth,
+                                             which_leaf = which_leaf, max_depth = max_depth) for i in range(len(X))]
 
     def predict_smooth(self, X:pd.DataFrame, n_neighbors:int = None, alpha:float = 0.00001, beta:float = 2, representatives:bool = True) -> float or list:
         """
@@ -423,19 +426,21 @@ Output: {self.output}
             """
         if y == None:
             y:str = self.y
-            
-        answers:dict = {"depth":[], "mse_train":[], "mse_test":[]}
-        for i in range(1, int(log(self.len_dt/self.__min_samples, 2)) + 1):
-            answers["depth"].append(i)
-            temporary_model:DecisionTree = DecisionTree(train, y = self.y, max_depth = i,
-                                                        loss_function = self.__function_loss,
-                                                        loss_calc = self.__calc_loss)
 
-            y_:list = temporary_model.predict(train)
+        answers:dict = {"depth":[], "mse_train":[], "mse_test":[]}
+        
+        max_depth:int = int(log(self.len_dt/self.__min_samples, 2)) + 1
+        temporary_model:DecisionTree = DecisionTree(train, y = self.y, max_depth = max_depth,
+                                                    loss_function = self.__function_loss,
+                                                    loss_calc = self.__calc_loss)
+        for i in range(1, max_depth):
+            answers["depth"].append(i)
+
+            y_:list = temporary_model.predict(train, max_depth = i)
             y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(train[y], y_)])
             answers["mse_train"].append(y_)
             
-            y_:list = temporary_model.predict(test)
+            y_:list = temporary_model.predict(test, max_depth = i)
             y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(test[y], y_)])
             answers["mse_test"].append(y_)
 

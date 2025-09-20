@@ -36,13 +36,13 @@ if __name__ == "__main__":
 ####
 
 ###########################################################################
-##    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
-##    df = df.drop(columns = ["species"])
-##    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 5, min_samples = 2)
-##    print(model)
-##    model.plot_tree()
-##    resp1 = model.plot_ci(test = df.iloc[140:])
-##    model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
+    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+    df = df.drop(columns = ["species"])
+    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 5, min_samples = 2)
+    print(model)
+    #model.plot_tree()
+    #resp1 = model.plot_ci(test = df.iloc[140:])
+    model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
 ##    
 ##    
 ##    def simple_loss_2(y) -> float:
@@ -173,24 +173,24 @@ if __name__ == "__main__":
 ##plt.show()
 
 ###########################################################################
-df = sns.load_dataset("flights")  # ou "tips", "titanic", "penguins", etc.
-meses:list = [mes for mes in df["month"].iloc[:12]]
-df["month"] = df["month"].replace({mes:int(i+1) for i, mes in enumerate(meses)})
-df["month"] = df["month"].astype(int)
-
-print(df)
-
-def simple_loss_3(y:pd.DataFrame) -> float:
-    y_:float = y.mean()
-    return sum([(y_i - y_)**8 for y_i in y])
-
-model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 5, min_samples = 1,
-                      loss_function = simple_loss_3)
-
-
-model3.plot_tree()
-
-model3.save("test")
-
-new_model = DecisionTree.load("test")
-new_model.plot_tree()
+##df = sns.load_dataset("flights")  # ou "tips", "titanic", "penguins", etc.
+##meses:list = [mes for mes in df["month"].iloc[:12]]
+##df["month"] = df["month"].replace({mes:int(i+1) for i, mes in enumerate(meses)})
+##df["month"] = df["month"].astype(int)
+##
+##print(df)
+##
+##def simple_loss_3(y:pd.DataFrame) -> float:
+##    y_:float = y.mean()
+##    return sum([(y_i - y_)**8 for y_i in y])
+##
+##model3 = DecisionTree(data = df.iloc[::2], y = "passengers", max_depth = 5, min_samples = 1,
+##                      loss_function = simple_loss_3)
+##
+##
+##model3.plot_tree()
+##
+##model3.save("test")
+##
+##new_model = DecisionTree.load("test")
+##new_model.plot_tree()
