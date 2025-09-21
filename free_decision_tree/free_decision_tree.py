@@ -471,7 +471,7 @@ Output: {self.output}
         
         max_depth:int = int(log(self.len_dt/self.__min_samples, 2)) + 1
         
-        args:dict = {"data":self.dt,
+        args:dict = {"data":train,
                      "y":self.y,
                      "min_samples":self.__min_samples,
                      "loss_function":self.__function_loss,
