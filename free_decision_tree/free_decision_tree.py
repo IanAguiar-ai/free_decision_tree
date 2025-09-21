@@ -266,7 +266,7 @@ Output: {self.output}
                 if self.__tree_search:
                     w_tree:int = self.__tree_search_w
                     self.dt = self.dt.sort_values(by = col)
-                    i_min, i_now, i_max = 0, len(self.dt)//2, len(self.dt) - 1                   
+                    i_min, i_now, i_max = 0, len(self.dt)//2, len(self.dt) - 2                
                     while True:
                         division_min:int = self.dt.iloc[i_min][col]
                         dt_1_min:pd.DataFrame = self.dt[self.dt[col] <= division_min]
