@@ -470,9 +470,16 @@ Output: {self.output}
         answers:dict = {"depth":[], "mse_train":[], "mse_test":[]}
         
         max_depth:int = int(log(self.len_dt/self.__min_samples, 2)) + 1
-        temporary_model:DecisionTree = DecisionTree(train, y = self.y, max_depth = max_depth,
-                                                    loss_function = self.__function_loss,
-                                                    loss_calc = self.__calc_loss)
+        
+        args:dict = {"data":self.dt,
+                     "y":self.y,
+                     "min_samples":self.__min_samples,
+                     "loss_function":self.__function_loss,
+                     "loss_calc":self.__calc_loss,
+                     "tree_search":self.__tree_search,
+                     "tree_search_w":self.__tree_search_w}
+        
+        temporary_model:DecisionTree = DecisionTree(max_depth = max_depth, **args)
         for i in range(1, max_depth):
             answers["depth"].append(i)
 
