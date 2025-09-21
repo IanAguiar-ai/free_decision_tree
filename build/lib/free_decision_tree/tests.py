@@ -76,7 +76,7 @@ if __name__ == "__main__":
     print(model)
     model.plot_tree()
 ##    resp1 = model.plot_ci(test = df.iloc[140:])
-    model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
+    model.plot_sensitivity(train = df.iloc[:900], test = df.iloc[900:])
 ##    
 ##    
 ##    def simple_loss_2(y) -> float:
