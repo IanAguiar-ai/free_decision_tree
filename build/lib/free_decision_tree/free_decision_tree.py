@@ -63,11 +63,11 @@ class DecisionTree:
     """
     __slots__ = ("dt", "y", "X", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
                  "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
-                 "plot", "__jumps", "__dt_with_y")
+                 "plot", "__jumps", "__dt_with_y", "__tree_search", "__tree_search_w")
     
     def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 1, *, 
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, function_prediction_leaf:"function" = mean,
-                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, optimized:int = -1) -> None:
+                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, tree_search:bool = False, tree_search_w:int = 1, optimized:int = -1) -> None:
         """
         ...
         """
@@ -96,6 +96,8 @@ class DecisionTree:
         self.value_loss:float = None
         self.output:float = function_prediction_leaf(self.dt[self.y])
         self.__y_loss:float = self.__function_loss(self.dt[self.y])
+        self.__tree_search:bool = tree_search
+        self.__tree_search_w:int = tree_search_w
 
         # To plot loading
         if plot == None:
@@ -121,7 +123,9 @@ class DecisionTree:
                             "print":self.__print_,
                             "plot":self.plot,
                             "optimized":optimized,
-                            "train":False}
+                            "train":False,
+                            "tree_search":tree_search,
+                            "tree_search_w":tree_search_w}
 
         # Train
         if train:
@@ -246,7 +250,7 @@ Output: {self.output}
             
         return results[0] if len(results) == 1 else results
 
-    def train(self, *, tree_search:bool = False, w_tree:int = 10) -> None:
+    def train(self) -> None:
         """
         Train the decision tree recursively by splitting nodes.
         """
@@ -259,8 +263,8 @@ Output: {self.output}
         
         for col in self.dt.columns:
             if col != self.y:
-                if tree_search:
-                    w_tree:int = 10
+                if self.__tree_search:
+                    w_tree:int = self.__tree_search_w
                     self.dt = self.dt.sort_values(by = col)
                     i_min, i_now, i_max = 0, len(self.dt)//2, len(self.dt) - 1                   
                     while True:

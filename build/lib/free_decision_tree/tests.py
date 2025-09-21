@@ -70,7 +70,7 @@ if __name__ == "__main__":
     df = pd.concat([df, df_sintetico], ignore_index=True)
 
     t0 = time()
-    model = DecisionTree(data = df.iloc[:], y = "petal_length", max_depth = 5, min_samples = 2)
+    model = DecisionTree(data = df.iloc[:], y = "petal_length", max_depth = 5, min_samples = 2, tree_search = True)
     t1 = time()
     print(t1-t0)
     print(model)
