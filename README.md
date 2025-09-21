@@ -15,6 +15,8 @@ A customizable implementation of decision trees for regression, written from scr
 - **0.0.6**
     - Faster plot_sensitivity.
 
+- **0.0.7**
+    - Tree search option in train.
 
 ---
 

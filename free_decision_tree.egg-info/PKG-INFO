@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: free_decision_tree
-Version: 0.0.6
+Version: 0.0.7
 Summary: Modifiable decision tree.
 Author: ['Ian dos Anjos Melo Aguiar']
 Author-email: <iannaianjos@gmail.com>
@@ -34,6 +34,8 @@ A customizable implementation of decision trees for regression, written from scr
 - **0.0.6**
     - Faster plot_sensitivity.
 
+- **0.0.7**
+    - Tree search option in train.
 
 ---
 

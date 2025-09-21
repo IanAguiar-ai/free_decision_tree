@@ -5,6 +5,7 @@ if __name__ == "__main__":
     import pandas as pd
     import matplotlib.pyplot as plt
     from random import random, seed
+    from time import time
 
 ##    df = sns.load_dataset("titanic")  # ou "iris", "tips", "titanic", "penguins", etc.
 ##    df["sex"] = df["sex"].replace({"female": 0, "male": 1})
@@ -36,12 +37,45 @@ if __name__ == "__main__":
 ####
 
 ###########################################################################
-    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
-    df = df.drop(columns = ["species"])
-    model = DecisionTree(data = df.iloc[:140], y = "petal_length", max_depth = 5, min_samples = 2)
+##    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+##    df = df.drop(columns = ["species"])
+    import seaborn as sns
+    import pandas as pd
+    import numpy as np
+
+    # Carrega o dataset original e remove a coluna 'species'
+    df = sns.load_dataset("iris")
+    df = df.drop(columns=["species"])
+
+    # Define a seed para reprodutibilidade
+    np.random.seed(42)
+
+    # Número de dados sintéticos que você quer gerar
+    n_sinteticos = 1000
+
+    # Calcula média e desvio padrão de cada coluna
+    means = df.mean()
+    stds = df.std()
+
+    # Gera dados sintéticos com distribuição normal baseada nas estatísticas originais
+    dados_sinteticos = {
+        col: np.random.normal(loc=means[col], scale=stds[col], size=n_sinteticos)
+        for col in df.columns
+    }
+
+    # Cria um DataFrame com os dados sintéticos
+    df_sintetico = pd.DataFrame(dados_sinteticos)
+
+    # Junta os dados originais com os sintéticos
+    df = pd.concat([df, df_sintetico], ignore_index=True)
+
+    t0 = time()
+    model = DecisionTree(data = df.iloc[:], y = "petal_length", max_depth = 5, min_samples = 2)
+    t1 = time()
+    print(t1-t0)
     print(model)
-    #model.plot_tree()
-    #resp1 = model.plot_ci(test = df.iloc[140:])
+    model.plot_tree()
+##    resp1 = model.plot_ci(test = df.iloc[140:])
     model.plot_sensitivity(train = df.iloc[:100], test = df.iloc[100:])
 ##    
 ##    

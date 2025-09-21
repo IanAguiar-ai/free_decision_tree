@@ -246,7 +246,7 @@ Output: {self.output}
             
         return results[0] if len(results) == 1 else results
 
-    def train(self) -> None:
+    def train(self, *, tree_search:bool = False, w_tree:int = 10) -> None:
         """
         Train the decision tree recursively by splitting nodes.
         """
@@ -259,21 +259,57 @@ Output: {self.output}
         
         for col in self.dt.columns:
             if col != self.y:
-                for i in range(0, len(self.dt[col]), self.__jumps):
-                    division:int = self.dt.iloc[i][col]
-                    dt_1:pd.DataFrame = self.dt[self.dt[col] <= division]
-                    dt_2:pd.DataFrame = self.dt[self.dt[col] > division]
+                if tree_search:
+                    w_tree:int = 10
+                    self.dt = self.dt.sort_values(by = col)
+                    i_min, i_now, i_max = 0, len(self.dt)//2, len(self.dt) - 1                   
+                    while True:
+                        division_min:int = self.dt.iloc[i_min][col]
+                        dt_1_min:pd.DataFrame = self.dt[self.dt[col] <= division_min]
+                        dt_2_min:pd.DataFrame = self.dt[self.dt[col] > division_min]
+                        
+                        final_loss_min:float = self.__calc_loss_tree(dt_1_min, dt_2_min, col)
 
-                    if (len(dt_1) >= self.__min_samples) and (len(dt_2) >= self.__min_samples):
-                        if (self.division == None) or (self.variable_division == None):
-                            final_loss:float = self.__calc_loss_tree(dt_1, dt_2, col)
-                            self.__update_parameters(division = division, variable = col, loss = final_loss)
+                        division_max:int = self.dt.iloc[i_max][col]
+                        dt_1_max:pd.DataFrame = self.dt[self.dt[col] <= division_max]
+                        dt_2_max:pd.DataFrame = self.dt[self.dt[col] > division_max]
+                        
+                        final_loss_max:float = self.__calc_loss_tree(dt_1_max, dt_2_max, col)
 
-                        else:
+                        if (i_min == i_now) or (i_max == i_now):
+                            self.__update_parameters(division = division_min, variable = col, loss = final_loss_min)
+                            break
+                        
+                        if min(final_loss_min, final_loss_max) == final_loss_min:
+                            self.__update_parameters(division = division_min, variable = col, loss = final_loss_min)
+                            i_max = int((i_now + i_max*w_tree)//(w_tree+1))
+                            i_now = (i_max + i_min)//2
+
+                        elif min(final_loss_min, final_loss_max) == final_loss_max:
+                            self.__update_parameters(division = division_max, variable = col, loss = final_loss_max)
+                            i_min = int((i_now + i_min*w_tree)//(w_tree+1) + 1)
+                            i_now = (i_max + i_min)//2
+
+                else:
+                    #self.dt = self.dt.sort_values(by = col)
+                    #all_loses = []
+                    for i in range(0, len(self.dt[col]), self.__jumps):
+                        division:int = self.dt.iloc[i][col]
+                        dt_1:pd.DataFrame = self.dt[self.dt[col] <= division]
+                        dt_2:pd.DataFrame = self.dt[self.dt[col] > division]
+
+                        if (len(dt_1) >= self.__min_samples) and (len(dt_2) >= self.__min_samples):
                             final_loss:float = self.__calc_loss_tree(dt_1, dt_2, col)
+                            #all_loses.append(final_loss)
                             
-                            if final_loss < self.value_loss:
+                            if (self.division == None) or (self.variable_division == None):
                                 self.__update_parameters(division = division, variable = col, loss = final_loss)
+                            elif final_loss < self.value_loss:
+                                self.__update_parameters(division = division, variable = col, loss = final_loss)
+                    #plt.figure(figsize = (10, 6))
+                    #plt.plot([i for i in range(len(all_loses))], all_loses)
+                    #plt.grid()
+                    #plt.show()
 
         # Update tree
         self.__update_tree()
