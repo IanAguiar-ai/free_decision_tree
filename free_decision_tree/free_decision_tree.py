@@ -1,5 +1,6 @@
 from time import time
 from math import log
+from random import seed
 
 # To export and import
 import pickle
@@ -9,6 +10,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+variables_methods:tuple = ("dt", "y", "X", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
+                           "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
+                           "plot", "__jumps", "__dt_with_y", "__tree_search", "__tree_search_w",
+                           "__all_trees", "__how_many_trees", "__samples_for_tree", "__seed")
 
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
@@ -61,9 +67,7 @@ class DecisionTree:
     """
     ...
     """
-    __slots__ = ("dt", "y", "X", "__min_samples", "len_dt", "division", "variable_division", "__depth", "__max_depth", "ls", "rs",
-                 "__function_loss", "__calc_loss", "value_loss", "output", "__y_loss", "__args", "__print_",
-                 "plot", "__jumps", "__dt_with_y", "__tree_search", "__tree_search_w")
+    __slots__ = variables_methods
     
     def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 3, min_samples:int = 1, *, 
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, function_prediction_leaf:"function" = mean,
@@ -379,9 +383,9 @@ Output: {self.output}
         Saves the complete tree.
         """
         p = Path(path + ".decisiontree")
-        p.parent.mkdir(parents=True, exist_ok=True)
+        p.parent.mkdir(parents = True, exist_ok = True)
         with open(p, "wb") as f:
-            pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
 
     @classmethod
     def load(cls, path:str) -> "DecisionTree":
@@ -556,3 +560,148 @@ Output: {self.output}
         plt.tight_layout()
         plt.show()
         return confidence_value
+
+class RandomFlorest:
+    """
+    ...
+    """
+    __slots__ = variables_methods
+    
+    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 4, min_samples:int = 1, how_many_trees:int = 20, samples_for_tree:int = None, seed:int = 1, *, 
+                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, function_prediction_leaf:"function" = mean,
+                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, tree_search:bool = False, tree_search_w:int = 1, optimized:int = -1) -> None:
+        """
+        ...
+        """
+        # Basic information
+        self.dt:pd.DataFrame = data
+        self.y:str = y
+        self.X:str = [col if col != self.y else None for col in self.dt.columns]
+        while None in self.X:
+            self.X.remove(None)
+        self.__min_samples:int = min_samples
+        self.len_dt:int = len(data)
+        self.division:float = None
+        self.variable_division:str = None
+        self.__depth:int = depth if depth != None else 0
+        self.__max_depth:int = max_depth
+        self.__print_:bool = print
+        self.__dt_with_y:pd.DataFrame = False # To smoothing tecnique
+        self.__all_trees:list = []
+        self.__how_many_trees:int = how_many_trees
+        self.__samples_for_tree:int = max((self.len_dt//self.__how_many_trees)*3 + 1, min(20, self.len_dt)) if samples_for_tree == None else samples_for_tree
+
+        # Train
+        self.__function_loss:"function" = loss_function
+        self.__calc_loss:"function" = loss_calc
+        self.value_loss:float = None
+        self.output:float = function_prediction_leaf(self.dt[self.y])
+        self.__y_loss:float = self.__function_loss(self.dt[self.y])
+        self.__tree_search:bool = tree_search
+        self.__tree_search_w:int = tree_search_w
+        self.__seed:int = seed
+
+        # To plot loading
+        if plot == None:
+            self.plot = Plot(total = int(2**(self.__max_depth+1) - 1), length = 50)
+        else:
+            self.plot = plot
+
+        # optimized
+        if (optimized == False) or (optimized == None):
+            self.__jumps = 1
+        else:
+            optimized = self.len_dt//optimized if optimized >= 1 else self.len_dt//2_000 * self.__max_depth
+            self.__jumps = max(1, optimized)
+
+        # For son
+        self.__args:dict = {"y":self.y,
+                            "min_samples":self.__min_samples,
+                            "max_depth":self.__max_depth,
+                            "loss_function":self.__function_loss,
+                            "loss_calc":self.__calc_loss,
+                            "function_prediction_leaf":function_prediction_leaf,
+                            "print":self.__print_,
+                            "plot":self.plot,
+                            "optimized":optimized,
+                            "train":True,
+                            "tree_search":tree_search,
+                            "tree_search_w":tree_search_w}
+
+        # Train
+        if train:
+            self.train()
+
+    def __call__(self, X:pd.DataFrame) -> float:
+        """
+        ...
+        """
+        return self.predict(X)
+
+    def __print(self, str_:str, end = "\n"):
+        if self.__print_:
+            print(str_, end = end)
+        return None
+
+    def __repr__(self):
+        return f"""
+DataFrame:
+    Columns of DataFrame (X): {', '.join((list(self.X)))}
+    y: {self.y}
+    Len of Dataframe: {self.len_dt}
+    Number of trees: {self.__how_many_trees}
+    Samples per tree: {self.__samples_for_tree}
+
+Variables:
+    Min Samples: {self.__min_samples}
+    Max Depth: {self.__max_depth}
+    optimized: {'True ' + '(' + str(self.len_dt//self.__jumps) + ' tests per dimension)' if self.__jumps != 1 else 'False'}
+
+Functions:
+    Loss Function: {self.__function_loss.__name__}
+    Join Loss: {self.__calc_loss.__name__}
+
+Output: {self.output}
+"""
+
+    def train(self):
+        """
+        ...
+        """
+        for _ in range(self.__how_many_trees):
+            temporary_data:pd.DataFrame = self.dt.sample(n = self.__samples_for_tree, random_state = self.__seed + _, replace = True)
+            self.__all_trees.append(DecisionTree(temporary_data, **self.__args))
+
+    def predict(self, X):
+        """
+        ...
+        """
+        values = [0 for i in range(len(X))]
+        for _ in range(self.__how_many_trees):
+            temporary:list = self.__all_trees[_].predict(X)
+            for index, temp in enumerate(temporary):
+                values[index] += temp/self.__how_many_trees
+
+        return values
+
+    def save(self, path:str) -> None:
+        """
+        Saves the complete tree.
+        """
+        p = Path(path + ".randomflorest")
+        p.parent.mkdir(parents = True, exist_ok = True)
+        with open(p, "wb") as f:
+            pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, path:str) -> "RandomFlorest":
+        """
+        Loads and returns a tree previously saved by RandomFlorest.save().
+        """
+        if not ".randomflorest" in path:
+            path += ".randomflorest"
+        with open(path, "rb") as f:
+            obj = pickle.load(f)
+        if not isinstance(obj, cls):
+            raise TypeError("The file does not contain a RandomFlorest instance.")
+        return obj

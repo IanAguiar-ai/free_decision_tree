@@ -17,6 +17,9 @@ A customizable implementation of decision trees for regression, written from scr
 
 - **0.0.7**
     - Tree search option in train.
+    
+- **0.1.0**
+    - Add Random Florest.
 
 ---
 
