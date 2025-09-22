@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: free_decision_tree
-Version: 0.0.7
+Version: 0.1.0
 Summary: Modifiable decision tree.
 Author: ['Ian dos Anjos Melo Aguiar']
 Author-email: <iannaianjos@gmail.com>
@@ -36,6 +36,10 @@ A customizable implementation of decision trees for regression, written from scr
 
 - **0.0.7**
     - Tree search option in train.
+    
+- **0.1.0**
+    - Add Random Florest;
+    - Random forest prediction has "edges" as a parameter, where it lets the tree choose more extreme values.
 
 ---
 
@@ -87,6 +91,74 @@ tree = DecisionTree(df, y="y", max_depth=2, min_samples=1)
 print(tree)
 ```
 
+Output:
+
+```python
+DataFrame:
+    Columns of DataFrame (X): x1, x2
+    y: y
+    Len of Dataframe: 5
+
+Values:
+    Depth: root
+    Division in: x1
+    In value: <= 2.0
+    Self loss: 9.671999999999997
+    Loss in division: 2.271666666666666
+
+Variables:
+    Min Samples: 1
+    Max Depth: 2
+    optimized: False
+
+Functions:
+    Loss Function: simple_loss
+    Join Loss: calc_loss
+
+Output: 3.04
+```
+
+---
+
+### Train
+
+Method 1:
+
+```python
+from free_decision_tree import DecisionTree
+
+# Train tree
+tree = DecisionTree(df, y="y", max_depth=2, min_samples=1)
+```
+
+Method 2:
+
+```python
+from free_decision_tree import DecisionTree
+
+# Train tree
+tree = DecisionTree(df, y="y", max_depth=2, min_samples=1, train=False)
+tree.train()
+```
+
+There are two training algorithms, the traditional one which takes longer and the tree search one. By default, the traditional one is used, but if you want a faster one and want to ensure that the loss functions are convex, you can use the tree search one. It is recommended that you test both to understand the differences.
+
+```python
+from free_decision_tree import DecisionTree
+
+# Train tree
+tree = DecisionTree(df, y="y", max_depth=2, min_samples=1, tree_search=True)
+```
+
+This method has a parameter called `tree_search` that controls how smooth the method will be, the higher the value the slower it will be, but in return the more accurate it can be (as long as the loss function is convex). Values ​​between 1 and 6 are recommended, being an integer.
+
+```python
+from free_decision_tree import DecisionTree
+
+# Train tree
+tree = DecisionTree(df, y="y", max_depth=2, min_samples=1, tree_search=True, tree_search_w=3)
+```
+
 ---
 
 ### Prediction
@@ -103,6 +175,16 @@ You can also call the tree directly:
 
 ```python
 prediction = tree(X_test)
+```
+
+If you don't want the prediction to reach the leaf, there is a parameter called `max_depth` that controls the maximum depth of the output.
+
+```python
+# Predict on new data
+X_test = pd.DataFrame({"x1": [2.5], "x2": [3.0]})
+prediction = tree.predict(X_test, max_depth=2)
+
+print(prediction)  # Returns float or list of floats
 ```
 
 ---
