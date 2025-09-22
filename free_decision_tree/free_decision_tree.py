@@ -567,7 +567,7 @@ class RandomFlorest:
     """
     __slots__ = variables_methods
     
-    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 4, min_samples:int = 1, how_many_trees:int = 20, samples_for_tree:int = None, seed:int = 1, *, 
+    def __init__(self, data:pd.DataFrame, y:str, max_depth:int = 4, min_samples:int = 1, how_many_trees:int = 10, samples_for_tree:int = None, seed:int = 1, *, 
                  loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, function_prediction_leaf:"function" = mean,
                  plot:Plot = None, train:bool = True, depth:int = None, print:bool = False, tree_search:bool = False, tree_search_w:int = 1, optimized:int = -1) -> None:
         """
