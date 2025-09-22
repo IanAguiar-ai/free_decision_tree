@@ -41,18 +41,20 @@ if __name__ == "__main__":
     from random import random, seed
     from math import cos
     seed(1)
-    df = pd.DataFrame({"a":[i for i in range(300)],
-                       "b":[i*0.01 + cos(i/7) + cos(i/17) + random()/5 for i in range(300)]})
+    df = pd.DataFrame({"a":[i for i in range(400)],
+                       "b":[i*0.01 + cos(i/7) + cos(i/17) + random()/5 for i in range(400)]})
 
     model1 = RandomFlorest(df, y = "b", max_depth = 4, how_many_trees = 10)
     model2 = DecisionTree(df, y = "b", max_depth = 4)
 
-    plt.figure(figsize = (14, 5))
+    plt.figure(figsize = (18, 5))
     plt.plot(df["a"], df["b"], label = "Real")
     plt.plot(df["a"], model1(df), label = "Random Florest")
+    plt.plot(df["a"], model1.predict(df, edges = .2), label = "Random Florest cut = 0.2")
     plt.plot(df["a"], model2(df), label = "Decision Tree")    
     plt.legend()
     plt.show()
+    1/0
 
 ###########################################################################
 ##    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.

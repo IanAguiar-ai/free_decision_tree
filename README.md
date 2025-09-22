@@ -19,7 +19,8 @@ A customizable implementation of decision trees for regression, written from scr
     - Tree search option in train.
     
 - **0.1.0**
-    - Add Random Florest.
+    - Add Random Florest;
+    - Random forest prediction has "edges" as a parameter, where it lets the tree choose more extreme values.
 
 ---
 

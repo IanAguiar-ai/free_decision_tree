@@ -672,15 +672,35 @@ Output: {self.output}
             temporary_data:pd.DataFrame = self.dt.sample(n = self.__samples_for_tree, random_state = self.__seed + _, replace = True)
             self.__all_trees.append(DecisionTree(temporary_data, **self.__args))
 
-    def predict(self, X):
+    def predict(self, X, edges:int = None):
         """
         ...
         """
-        values = [0 for i in range(len(X))]
-        for _ in range(self.__how_many_trees):
-            temporary:list = self.__all_trees[_].predict(X)
-            for index, temp in enumerate(temporary):
-                values[index] += temp/self.__how_many_trees
+        if edges == None:
+            values = [0 for i in range(len(X))]
+            for _ in range(self.__how_many_trees):
+                temporary:list = self.__all_trees[_].predict(X)
+                for index, temp in enumerate(temporary):
+                    values[index] += temp/self.__how_many_trees
+        else:
+            values = [[] for i in range(len(X))]
+            for _ in range(self.__how_many_trees):
+                temporary:list = self.__all_trees[_].predict(X)
+                for index, temp in enumerate(temporary):
+                    values[index].append(temp)
+
+            for index in range(len(values)):
+                cut:int = min(max(int(edges*len(values[index])), 1), self.__how_many_trees)
+                values[index] = sorted(values[index])
+
+                mean:float = sum(values[index])/len(values[index])
+                if abs(sum(values[index][-cut:])/len(values[index][-cut:]) - mean) > abs(sum(values[index][:cut])/len(values[index][:cut]) - mean):
+                    values[index] = sum(values[index][:cut])/len(values[index][:cut])
+                else:
+                    values[index] = sum(values[index][-cut:])/len(values[index][-cut:])
+
+                #values[index] = [*values[index][:cut], *values[index][-cut:]]
+                #values[index] = sum(values[index])/len(values[index])
 
         return values
 
