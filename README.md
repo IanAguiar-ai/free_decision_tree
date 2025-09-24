@@ -586,3 +586,30 @@ Functions:
 
 Output: 3.04
 ```
+
+Example with prediction (1 DecisionTree and 2 RandomFlorest):
+
+```python
+from random import random, seed
+from math import cos
+import matplotlib.pyplot as plt
+import pandas as pd
+
+seed(1)
+df = pd.DataFrame({"a":[i for i in range(400)],
+                       "b":[i*0.01 + cos(i/7) + cos(i/17) + random()/5 for i in range(400)]})
+
+model1 = RandomFlorest(df, y = "b", max_depth = 5, how_many_trees = 20)
+model2 = DecisionTree(df, y = "b", max_depth = 5)
+model3 = RandomFlorest(df, y = "b", max_depth = 5, how_many_trees = 20)
+
+plt.figure(figsize = (12, 5))
+plt.plot(df["a"], df["b"], label = "Real", color = "black", linestyle = "--")
+plt.plot(df["a"], model2.predict(df), label = "Decision Tree")
+plt.plot(df["a"], model1.predict(df), label = "Random Florest")
+plt.plot(df["a"], model3.predict(df, edges = 0.2), label = "Random Florest (edge = 0.2)")
+plt.legend()
+plt.show()
+```
+
+![ex_randomflorest](images/example_9.png)
