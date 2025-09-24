@@ -74,7 +74,7 @@ print(tree)
 
 Output:
 
-```python
+```
 DataFrame:
     Columns of DataFrame (X): x1, x2
     y: y
@@ -522,3 +522,67 @@ def mean(dt:pd.DataFrame):
 - **`Plot`**: Progress bar utility.
 - **`simple_loss(y)`**: Default variance-based loss.
 - **`calc_loss(loss_1, loss_2)`**: Default method to merge losses.
+
+---
+
+# DecisionTree
+
+A customizable implementation of decision trees for regression, written from scratch with flexible loss functions and visualization tools.
+
+---
+
+## Inputs
+
+When creating a `DecisionTree`, you can specify:
+
+- **all DecisionTree parameters**
+...
+- **how_many_trees** (`int`, default=`-1`): Number of DecisionTrees in the model.
+- **samples_for_tree**
+- **seed**
+
+---
+
+## Use
+
+### Example
+
+```python
+import pandas as pd
+from free_decision_tree import RandomFlorest
+
+# Example dataset
+df = pd.DataFrame({
+    "x1": [1, 2, 3, 4, 5],
+    "x2": [2, 1, 4, 3, 5],
+    "y":  [1.2, 1.9, 3.1, 3.9, 5.1]
+})
+
+# Train tree
+tree = RandomFlorest(df, y = "y", max_depth=2, how_many_trees=10)
+
+# Print structure
+print(tree)
+```
+
+Output:
+
+```
+DataFrame:
+    Columns of DataFrame (X): x1, x2
+    y: y
+    Len of Dataframe: 5
+    Number of trees: 10
+    Samples per tree: 5
+
+Variables:
+    Min Samples: 1
+    Max Depth: 2
+    optimized: False
+
+Functions:
+    Loss Function: simple_loss
+    Join Loss: calc_loss
+
+Output: 3.04
+```
