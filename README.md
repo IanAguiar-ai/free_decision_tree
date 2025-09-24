@@ -525,15 +525,15 @@ def mean(dt:pd.DataFrame):
 
 ---
 
-# DecisionTree
+# RandomFlorest
 
-A customizable implementation of decision trees for regression, written from scratch with flexible loss functions and visualization tools.
+A customizable implementation of random florest for regression, written from scratch with flexible loss functions.
 
 ---
 
 ## Inputs
 
-When creating a `DecisionTree`, you can specify:
+When creating a `RandomFlorest`, you can specify:
 
 - **all DecisionTree parameters**
 ...
