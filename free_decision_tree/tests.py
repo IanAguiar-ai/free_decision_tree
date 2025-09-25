@@ -44,16 +44,20 @@ if __name__ == "__main__":
     df = pd.DataFrame({"a":[i for i in range(400)],
                        "b":[i*0.01 + cos(i/7) + cos(i/17) + random()/5 for i in range(400)]})
 
-    model1 = RandomFlorest(df, y = "b", max_depth = 4, how_many_trees = 10)
-    model2 = DecisionTree(df, y = "b", max_depth = 4)
+    model1 = RandomFlorest(df, y = "b", max_depth = 4, how_many_trees = 10, train = False)
+    model2 = DecisionTree(df, y = "b", max_depth = 4, train = False)
 
-    plt.figure(figsize = (18, 5))
-    plt.plot(df["a"], df["b"], label = "Real")
-    plt.plot(df["a"], model1(df), label = "Random Florest")
-    plt.plot(df["a"], model1.predict(df, edges = .2), label = "Random Florest cut = 0.2")
-    plt.plot(df["a"], model2(df), label = "Decision Tree")    
-    plt.legend()
-    plt.show()
+    model1.plot_sensitivity(train = df.iloc[:200], test = df.iloc[200:])
+    model2.plot_sensitivity(train = df.iloc[:200], test = df.iloc[200:])
+
+##    plt.figure(figsize = (18, 5))
+##    plt.plot(df["a"], df["b"], label = "Real")
+##    plt.plot(df["a"], model1(df), label = "Random Florest")
+##    plt.plot(df["a"], model1.predict(df, edges = .2), label = "Random Florest cut = 0.2")
+##    plt.plot(df["a"], model2(df), label = "Decision Tree")    
+##    plt.legend()
+##    plt.show()
+##    print(set(model1.predict(df, max_depth = 2)))
     1/0
 
 ###########################################################################

@@ -22,6 +22,10 @@ A customizable implementation of decision trees for regression, written from scr
     - Add Random Florest;
     - Random forest prediction has "edges" as a parameter, where it lets the tree choose more extreme values.
 
+- **0.1.1**
+    - Add parameter max_depth in prediction of Random Florest;
+    - Add plot_sensitivity in Random Florest.
+    
 ---
 
 ## Download
