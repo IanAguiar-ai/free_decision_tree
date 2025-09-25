@@ -6,6 +6,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from random import random, seed
     from time import time
+    from pathlib import Path
 
 ##    df = sns.load_dataset("titanic")  # ou "iris", "tips", "titanic", "penguins", etc.
 ##    df["sex"] = df["sex"].replace({"female": 0, "male": 1})

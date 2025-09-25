@@ -382,7 +382,7 @@ Output: {self.output}
         """
         Saves the complete tree.
         """
-        p = Path(path + ".decisiontree")
+        p = Path(str(path) + ".decisiontree")
         p.parent.mkdir(parents = True, exist_ok = True)
         with open(p, "wb") as f:
             pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
@@ -393,7 +393,7 @@ Output: {self.output}
         Loads and returns a tree previously saved by DecisionTree.save().
         """
         if not ".decisiontree" in path:
-            path += ".decisiontree"
+            path = str(path) + ".decisiontree"
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):
@@ -708,7 +708,7 @@ Output: {self.output}
         """
         Saves the complete tree.
         """
-        p = Path(path + ".randomflorest")
+        p = Path(str(path) + ".randomflorest")
         p.parent.mkdir(parents = True, exist_ok = True)
         with open(p, "wb") as f:
             pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
@@ -719,7 +719,7 @@ Output: {self.output}
         Loads and returns a tree previously saved by RandomFlorest.save().
         """
         if not ".randomflorest" in path:
-            path += ".randomflorest"
+            path = str(path) + ".randomflorest"
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):
