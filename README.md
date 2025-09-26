@@ -618,3 +618,15 @@ plt.show()
 ```
 
 ![ex_randomflorest](images/example_9.png)
+
+### Plot sensitivity
+
+```python
+tree.plot_sensitivity(train=df, test=df, y="y", return_dataframe=False)
+```
+
+Performs a sensitivity test over different depths.
+Outputs:
+- MSE (train vs. test) for each depth.
+- A plot with the optimal depth (minimum test error).
+- Returns the best depth as `int`.

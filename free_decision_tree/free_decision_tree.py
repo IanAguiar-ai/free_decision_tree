@@ -672,7 +672,7 @@ Output: {self.output}
             temporary_data:pd.DataFrame = self.dt.sample(n = self.__samples_for_tree, random_state = self.__seed + _, replace = True)
             self.__all_trees.append(DecisionTree(temporary_data, **self.__args))
 
-    def predict(self, X, edges:int = None, max_depth:int = None):
+    def predict(self, X:pd.DataFrame, edges:int = None, max_depth:int = None) -> list or float:
         """
         ...
         """
@@ -680,12 +680,16 @@ Output: {self.output}
             values = [0 for i in range(len(X))]
             for _ in range(self.__how_many_trees):
                 temporary:list = self.__all_trees[_].predict(X, max_depth = max_depth)
+                if type(temporary) != list:
+                    temporary:list = [temporary]
                 for index, temp in enumerate(temporary):
                     values[index] += temp/self.__how_many_trees
         else:
             values = [[] for i in range(len(X))]
             for _ in range(self.__how_many_trees):
                 temporary:list = self.__all_trees[_].predict(X)
+                if type(temporary) != list:
+                    temporary:list = [temporary]
                 for index, temp in enumerate(temporary):
                     values[index].append(temp)
 
@@ -702,7 +706,7 @@ Output: {self.output}
                 #values[index] = [*values[index][:cut], *values[index][-cut:]]
                 #values[index] = sum(values[index])/len(values[index])
 
-        return values
+        return values if len(values) > 1 else values[0]
 
     def save(self, path:str) -> None:
         """
