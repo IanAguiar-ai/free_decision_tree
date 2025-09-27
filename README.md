@@ -629,4 +629,4 @@ Performs a sensitivity test over different depths.
 Outputs:
 - MSE (train vs. test) for each depth.
 - A plot with the optimal depth (minimum test error).
-- Returns the best depth as `int`.
+- Returns the best depth as `int` and the best number of trees as `int`.
