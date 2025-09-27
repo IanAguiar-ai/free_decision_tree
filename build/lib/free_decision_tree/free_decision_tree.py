@@ -382,7 +382,7 @@ Output: {self.output}
         """
         Saves the complete tree.
         """
-        p = Path(path + ".decisiontree")
+        p = Path(str(path) + ".decisiontree")
         p.parent.mkdir(parents = True, exist_ok = True)
         with open(p, "wb") as f:
             pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
@@ -393,7 +393,7 @@ Output: {self.output}
         Loads and returns a tree previously saved by DecisionTree.save().
         """
         if not ".decisiontree" in path:
-            path += ".decisiontree"
+            path = str(path) + ".decisiontree"
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):
@@ -672,20 +672,24 @@ Output: {self.output}
             temporary_data:pd.DataFrame = self.dt.sample(n = self.__samples_for_tree, random_state = self.__seed + _, replace = True)
             self.__all_trees.append(DecisionTree(temporary_data, **self.__args))
 
-    def predict(self, X, edges:int = None):
+    def predict(self, X:pd.DataFrame, edges:int = None, max_depth:int = None) -> list or float:
         """
         ...
         """
         if edges == None:
             values = [0 for i in range(len(X))]
             for _ in range(self.__how_many_trees):
-                temporary:list = self.__all_trees[_].predict(X)
+                temporary:list = self.__all_trees[_].predict(X, max_depth = max_depth)
+                if type(temporary) != list:
+                    temporary:list = [temporary]
                 for index, temp in enumerate(temporary):
                     values[index] += temp/self.__how_many_trees
         else:
             values = [[] for i in range(len(X))]
             for _ in range(self.__how_many_trees):
                 temporary:list = self.__all_trees[_].predict(X)
+                if type(temporary) != list:
+                    temporary:list = [temporary]
                 for index, temp in enumerate(temporary):
                     values[index].append(temp)
 
@@ -702,13 +706,13 @@ Output: {self.output}
                 #values[index] = [*values[index][:cut], *values[index][-cut:]]
                 #values[index] = sum(values[index])/len(values[index])
 
-        return values
+        return values if len(values) > 1 else values[0]
 
     def save(self, path:str) -> None:
         """
         Saves the complete tree.
         """
-        p = Path(path + ".randomflorest")
+        p = Path(str(path) + ".randomflorest")
         p.parent.mkdir(parents = True, exist_ok = True)
         with open(p, "wb") as f:
             pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
@@ -719,9 +723,74 @@ Output: {self.output}
         Loads and returns a tree previously saved by RandomFlorest.save().
         """
         if not ".randomflorest" in path:
-            path += ".randomflorest"
+            path = str(path) + ".randomflorest"
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):
             raise TypeError("The file does not contain a RandomFlorest instance.")
         return obj
+
+    def plot_sensitivity(self, train:pd.DataFrame, test:pd.DataFrame, y = None, return_dataframe:bool = False) -> (int, int):
+        """
+        Evaluate tree depth sensitivity by measuring MSE on train and test sets.
+
+        Args:
+            train (pd.DataFrame): Training dataset.
+            test (pd.DataFrame): Testing dataset.
+            y (str, optional): Target column. Defaults to self.y.
+
+        Returns:
+            int: Best depth (minimum MSE on test set).
+            """
+        if y == None:
+            y:str = self.y
+
+        answers:dict = {"depth":[], "how_many_trees":[], "mse_train":[], "mse_test":[]}
+        
+        max_depth:int = int(log(self.len_dt/self.__min_samples, 2)) + 1
+        
+        args:dict = {"data":train,
+                     "y":self.y,
+                     "min_samples":self.__min_samples,
+                     "loss_function":self.__function_loss,
+                     "loss_calc":self.__calc_loss,
+                     "tree_search":self.__tree_search,
+                     "tree_search_w":self.__tree_search_w,
+                     "samples_for_tree":self.__samples_for_tree}
+
+        for how_m_t in [5, 10, 20, 50]:
+            temporary_model:RandomFlorest = RandomFlorest(max_depth = max_depth, how_many_trees = how_m_t, **args)
+            for i in range(1, max_depth):
+                answers["depth"].append(i)
+                answers["how_many_trees"].append(how_m_t)
+
+                y_:list = temporary_model.predict(train, max_depth = i)
+                y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(train[y], y_)])
+                answers["mse_train"].append(y_)
+                
+                y_:list = temporary_model.predict(test, max_depth = i)
+                y_:list = 1/len(y_) * sum([(y_real - y_i)*(y_real - y_i) for y_real, y_i in zip(test[y], y_)])
+                answers["mse_test"].append(y_)
+
+        answers:pd.DataFrame = pd.DataFrame(answers)
+
+        best_idx   = answers["mse_test"].idxmin()
+        best_depth = int(answers.loc[best_idx, "depth"])
+        best_how_many_trees = int(answers.loc[best_idx, "how_many_trees"])
+
+
+        fig, ax = plt.subplots(figsize = (8, 4))
+        plt.scatter(answers["depth"], answers["mse_train"], c = answers["how_many_trees"], marker = "+", alpha = 0.2, label = "Train")
+        plt.scatter(answers["depth"], answers["mse_test"], c = answers["how_many_trees"], alpha = 0.2, label = "Test")
+        plt.axvline(x = best_depth, color = "red", linestyle = "--", linewidth = 1, alpha = 0.8, label = f"Ideal depth: {best_depth}")
+        plt.title(f"Sensitivity Test\nIdeal depth: {best_depth}, Ideal number of trees: {best_how_many_trees}")
+        plt.ylabel("MSE")
+        plt.xlabel("Depth")
+        plt.legend()
+        plt.grid()
+        plt.tight_layout()
+        plt.show()
+        if return_dataframe:
+            return answers
+        else:
+            return best_depth, best_how_many_trees
