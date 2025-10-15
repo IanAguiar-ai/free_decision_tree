@@ -522,6 +522,28 @@ def mean(dt:pd.DataFrame):
     return dt.mean()
 ```
 
+### To change the losses
+
+Example:
+
+```python
+from free_decision_tree import DecisionTree
+import pandas as pd
+import seaborn as sns
+
+def new_loss(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return sum([abs(y_i - y_) for y_i in y])
+
+def new_calc_loss(loss_1:float, loss_2:float) -> float:
+    return max(loss_1, loss_2)
+
+df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+df = df.drop(columns = ["species"])
+
+model = DecisionTree(data = df, y = "petal_length", loss_function = new_loss, loss_calc = new_calc_loss) # This change the tree
+```
+
 ---
 
 ## Structure
