@@ -25,7 +25,10 @@ A customizable implementation of decision trees for regression, written from scr
 - **0.1.1**
     - Add parameter max_depth in prediction of `RandomFlorest`;
     - Add plot_sensitivity in `RandomFlorest`;
-    - Bug fix for save and load in `DecisionTree` and `RandomFlorest`.
+    - Bug fix for save and load in `DecisionTree` and `RandomFlorest`.]
+    
+- **0.1.2**
+    - Bug fix to string in a self.division.
     
 ---
 
