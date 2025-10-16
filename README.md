@@ -4,6 +4,14 @@ A customizable implementation of decision trees for regression, written from scr
 
 ---
 
+## Download
+
+```bash
+pip install git+https://github.com/IanAguiar-ai/free_decision_tree
+```
+
+---
+
 ## Updates
 
 - **0.0.4**
@@ -32,14 +40,6 @@ A customizable implementation of decision trees for regression, written from scr
     
 - **0.2.0**
     - Add `IsolationDecisionTree`.
-    
----
-
-## Download
-
-```bash
-pip install git+https://github.com/IanAguiar-ai/free_decision_tree
-```
 
 ---
 
