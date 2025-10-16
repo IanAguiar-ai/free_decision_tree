@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: free_decision_tree
-Version: 0.1.1
+Version: 0.1.2
 Summary: Modifiable decision tree.
 Author: ['Ian dos Anjos Melo Aguiar']
 Author-email: <iannaianjos@gmail.com>
@@ -45,6 +45,9 @@ A customizable implementation of decision trees for regression, written from scr
     - Add parameter max_depth in prediction of `RandomFlorest`;
     - Add plot_sensitivity in `RandomFlorest`;
     - Bug fix for save and load in `DecisionTree` and `RandomFlorest`.
+    
+- **0.1.2**
+    - Bug fix to string in a self.division.
     
 ---
 
@@ -538,6 +541,28 @@ def mean(dt:pd.DataFrame):
     return dt.mean()
 ```
 
+### To change the losses
+
+Example:
+
+```python
+from free_decision_tree import DecisionTree
+import pandas as pd
+import seaborn as sns
+
+def new_loss(y:pd.DataFrame) -> float:
+    y_:float = y.mean()
+    return sum([abs(y_i - y_) for y_i in y])
+
+def new_calc_loss(loss_1:float, loss_2:float) -> float:
+    return max(loss_1, loss_2)
+
+df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
+df = df.drop(columns = ["species"])
+
+model = DecisionTree(data = df, y = "petal_length", loss_function = new_loss, loss_calc = new_calc_loss) # This change the tree
+```
+
 ---
 
 ## Structure
@@ -648,4 +673,4 @@ Performs a sensitivity test over different depths.
 Outputs:
 - MSE (train vs. test) for each depth.
 - A plot with the optimal depth (minimum test error).
-- Returns the best depth as `int`.
+- Returns the best depth as `int` and the best number of trees as `int`.

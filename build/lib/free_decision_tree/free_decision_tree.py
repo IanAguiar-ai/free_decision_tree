@@ -340,9 +340,9 @@ Output: {self.output}
         ...
         """
         if (self.value_loss == None) or (self.value_loss > loss):
-            self.division:float = division
-            self.variable_division:str = variable
-            self.value_loss:float = loss
+            self.division:float = float(division)
+            self.variable_division:str = str(variable)
+            self.value_loss:float = float(loss)
         return None
 
     def __update_tree(self) -> None:
