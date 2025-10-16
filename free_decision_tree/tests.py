@@ -266,10 +266,6 @@ df:dict = {"x":[*[cos(x/12) + cos(x/7) + random() for x in range(n)],
 
 df:pd.DataFrame = pd.DataFrame(df)
 
-
 model = IsolationDecisionTree(df, max_depth = 6)
-print(model)
-isolated:pd.DataFrame = model.isolate(1)
-print(isolated)
-#model.plot_tree()
-model.plot_isolation()
+isolated:pd.DataFrame = model.isolate(threshold = 1) #isolated optional
+model.plot_isolation(isolated = isolated) #isolated optional

@@ -720,4 +720,24 @@ Plot the cuts in the tree. The dataset has to be only 2 dimensions for this plot
 ```python
 tree.plot_isolation()
 ```
+
+Example:
+
+```python
+from math import cos, sin
+from random import seed, random
+seed(1)
+
+n:int = 200
+df:dict = {"x":[*[cos(x/12) + cos(x/7) + random() for x in range(n)],
+                *[3.2]],
+           "y":[*[cos(1 + x/3) + random() for x in range(n)],
+                *[3.2]]}
+
+df:pd.DataFrame = pd.DataFrame(df)
+
+model = IsolationDecisionTree(df, max_depth = 6)
+isolated:pd.DataFrame = model.isolate(threshold = 1) #isolated optional to show isolated points
+model.plot_isolation(isolated = isolated) #isolated optional to show isolated points
+```
 ![isolation_decisio_tree_1](images/isolation_decision_tree.png)

@@ -962,7 +962,6 @@ Output: {self.output}
         leafs_isolated:list = []
         i:int = 0
         while i < len(df_temporary):
-            print(df_temporary.iloc[i]["__dt_depth__"], threshold)
             if df_temporary.iloc[i]["__dt_depth__"] <= threshold:
                 leafs_isolated.append(df_temporary.iloc[i]["__dt_leaf__"])
             else:
@@ -1041,7 +1040,7 @@ Output: {self.output}
             raise TypeError("The file does not contain a DecisionTree instance.")
         return obj
 
-    def plot_isolation(self, dims = None, isolated = None, figsize = (6, 6), max_depth = None, line_kwargs = None):
+    def plot_isolation(self, dims:list = None, isolated:pd.DataFrame = None, figsize:tuple = (6, 6), max_depth:int = None, line_kwargs:dict = None):
         """
         ...
         """
@@ -1057,14 +1056,7 @@ Output: {self.output}
         plt.scatter(df[d1], df[d2], s = 30, alpha = 1/(len(self.dt)**(0.2)))
 
         if isolated is not None:
-            isolated = np.asarray(isolated)
-            if isolated.dtype == bool:
-                mask = isolated
-            else:
-                mask = np.zeros(len(df), dtype = bool)
-                mask[isolated] = True
-            if mask.any():
-                plt.scatter(df.loc[mask, d1], df.loc[mask, d2], color = "red", s = 40)
+            plt.scatter(isolated[dims[0]], isolated[dims[1]], color = "red", s = 40, label = "Anomaly")
 
         x1, x2 = float(df[d1].min()), float(df[d1].max())
         y1, y2 = float(df[d2].min()), float(df[d2].max())
@@ -1126,6 +1118,8 @@ Output: {self.output}
 
         _draw_splits(self, x1, x2, y1, y2, depth=0)
 
+        #if isolated is not None:
+        #    plt.legend()
         plt.xlabel(str(d1)); plt.ylabel(str(d2))
         plt.title(f"Isolation Decision Tree")
         plt.axis("equal")
