@@ -712,3 +712,12 @@ Same as `DecisionTree`.
 ```python
 tree.plot_tree()
 ```
+
+### Plot isolation
+
+Plot the cuts in the tree. The dataset has to be only 2 dimensions for this plot.
+
+```python
+tree.plot_isolation()
+```
+![isolation_decisio_tree_1](images/isolation_decision_tree.png)

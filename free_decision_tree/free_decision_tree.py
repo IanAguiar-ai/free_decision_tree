@@ -1041,59 +1041,93 @@ Output: {self.output}
             raise TypeError("The file does not contain a DecisionTree instance.")
         return obj
 
-    def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
+    def plot_isolation(self, dims = None, isolated = None, figsize = (7, 7), max_depth = None, line_kwargs = None):
         """
-        Plot the tree structure.
-
-        Args:
-            ax (matplotlib.axes.Axes, optional): Existing axis to draw on.
-            x (float): Horizontal position of the current node.
-            y (float): Vertical position of the current node.
-            dx (float): Horizontal distance between parent and children.
-            dy (float): Vertical distance between levels.
-            figsize (tuple, optional): Figure size if a new plot is created.
-            fontsize (int, optional): Font size for node labels.
-
-        Returns:
-            None
+        ...
         """
-        if figsize == None:
-            figsize = (3 + 2**(self.__max_depth), 1.5*self.__max_depth)
-        
-        if ax is None:
-            fig, ax = plt.subplots(figsize = figsize)
-            ax.set_axis_off()
-            self.plot_tree(ax = ax, x = x, y = y, dx = dx, dy = dy, figsize = figsize, fontsize = fontsize)
-            plt.tight_layout()
-            plt.show()
-            return
-
-        # texto do nó
-        if self.variable_division is None:
-            label = f"Leaf\nSamples: {self.len_dt}\nOutput: {self.output:.4f}"
-            color:str = "lightgreen"
-            alpha:float = 1
-        elif self.__depth == 0:
-            label = f"{self.variable_division} <= {self.division:.2f}\nSamples: {self.len_dt}"
-            color:str = "orange"
-            alpha:float = 1
+        if dims is None:
+            dims = [self.X[0], self.X[1]]
         else:
-            label = f"{self.variable_division} <= {self.division:.2f}\nSamples: {self.len_dt}"
-            color:str = "lightblue"
-            alpha:float = 1
+            assert len(dims) == 2, f"lenth of dims has be 2 no {len(dims)}!"
 
-        if fontsize == None:
-            fontsize = max(15 - 2*self.__depth, 6)
+        d1, d2 = dims
+        df = self.dt
 
-        ax.text(x, y, label, ha = "center", va = "center",
-                bbox = dict(boxstyle = "round", facecolor = color, edgecolor = "black", alpha = alpha),
-                fontsize = fontsize)
+        plt.figure(figsize=figsize)
+        plt.scatter(df[d1], df[d2], s = 30, alpha = 1/(len(self.dt)**(0.2)))
 
-        # Son
-        if self.ls is not None:
-            ax.plot([x, x-dx], [y-0.01, y-dy+0.01], color = "black")
-            self.ls.plot_tree(ax = ax, x = x-dx, y = y-dy, dx = dx/2, dy = dy)
-        if self.rs is not None:
-            ax.plot([x, x+dx], [y-0.01, y-dy+0.01], color = "black")
-            self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
-        return None
+        if isolated is not None:
+            isolated = np.asarray(isolated)
+            if isolated.dtype == bool:
+                mask = isolated
+            else:
+                mask = np.zeros(len(df), dtype = bool)
+                mask[isolated] = True
+            if mask.any():
+                plt.scatter(df.loc[mask, d1], df.loc[mask, d2], color = "red", s = 40)
+
+        x1, x2 = float(df[d1].min()), float(df[d1].max())
+        y1, y2 = float(df[d2].min()), float(df[d2].max())
+
+        if line_kwargs is None:
+            line_kwargs = {"linestyle": "--", "color": "red", "linewidth": 0.8, "alpha": 0.7}
+
+        all_cols = list(df.columns)
+
+        def _feat_index(var_name_or_idx):
+            if var_name_or_idx == d1: return 0
+            if var_name_or_idx == d2: return 1
+            if isinstance(var_name_or_idx, (int, np.integer)):
+                try:
+                    col_name = self.X[var_name_or_idx] if hasattr(self, "X") else all_cols[int(var_name_or_idx)]
+                    if col_name == d1: return 0
+                    if col_name == d2: return 1
+                except Exception:
+                    pass
+            if isinstance(var_name_or_idx, str):
+                if var_name_or_idx in all_cols:
+                    return -1
+            return -1
+
+        def _draw_splits(node, rx1, rx2, ry1, ry2, depth):
+            if node is None:
+                return
+            if (getattr(node, "ls", None) is None) and (getattr(node, "rs", None) is None):
+                return
+            if (max_depth is not None) and (depth > max_depth):
+                return
+
+            feat = getattr(node, "variable_division", None)
+            thr  = getattr(node, "division", None)
+            if (feat is None) or (thr is None):
+                _draw_splits(getattr(node, "ls", None), rx1, rx2, ry1, ry2, depth+1)
+                _draw_splits(getattr(node, "rs", None), rx1, rx2, ry1, ry2, depth+1)
+                return
+
+            fidx = _feat_index(feat)
+
+            if fidx == 0:
+                x = float(thr)
+                if rx1 < x < rx2:
+                    plt.plot([x, x], [ry1, ry2], **line_kwargs)
+                _draw_splits(getattr(node, "ls", None), rx1, min(rx2, x), ry1, ry2, depth+1)
+                _draw_splits(getattr(node, "rs", None), max(rx1, x), rx2, ry1, ry2, depth+1)
+
+            elif fidx == 1:
+                y = float(thr)
+                if ry1 < y < ry2:
+                    plt.plot([rx1, rx2], [y, y], **line_kwargs)
+                _draw_splits(getattr(node, "ls", None), rx1, rx2, ry1, min(ry2, y), depth+1)
+                _draw_splits(getattr(node, "rs", None), rx1, rx2, max(ry1, y), ry2, depth+1)
+
+            else:
+                _draw_splits(getattr(node, "ls", None), rx1, rx2, ry1, ry2, depth+1)
+                _draw_splits(getattr(node, "rs", None), rx1, rx2, ry1, ry2, depth+1)
+
+        _draw_splits(self, x1, x2, y1, y2, depth=0)
+
+        plt.xlabel(str(d1)); plt.ylabel(str(d2))
+        plt.title(f"Isolation Decision Tree")
+        plt.axis("equal")
+        plt.grid(True)
+        plt.show()
