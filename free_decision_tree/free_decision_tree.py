@@ -1041,7 +1041,7 @@ Output: {self.output}
             raise TypeError("The file does not contain a DecisionTree instance.")
         return obj
 
-    def plot_isolation(self, dims = None, isolated = None, figsize = (7, 7), max_depth = None, line_kwargs = None):
+    def plot_isolation(self, dims = None, isolated = None, figsize = (6, 6), max_depth = None, line_kwargs = None):
         """
         ...
         """
@@ -1130,4 +1130,5 @@ Output: {self.output}
         plt.title(f"Isolation Decision Tree")
         plt.axis("equal")
         plt.grid(True)
+        plt.tight_layout()
         plt.show()
