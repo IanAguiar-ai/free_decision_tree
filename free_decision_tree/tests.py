@@ -1,7 +1,7 @@
 if __name__ == "__main__":
     import seaborn as sns
     from sklearn.preprocessing import StandardScaler
-    from free_decision_tree import DecisionTree, RandomFlorest
+    from free_decision_tree import DecisionTree, RandomFlorest, IsolationDecisionTree
     import pandas as pd
     import matplotlib.pyplot as plt
     from random import random, seed
@@ -38,18 +38,18 @@ if __name__ == "__main__":
 ####
 
 ###########################################################################
-
-    from random import random, seed
-    from math import cos
-    seed(1)
-    df = pd.DataFrame({"a":[i for i in range(400)],
-                       "b":[i*0.01 + cos(i/7) + cos(i/17) + random()/5 for i in range(400)]})
-
-    model1 = RandomFlorest(df, y = "b", max_depth = 4, how_many_trees = 10, train = False)
-    model2 = DecisionTree(df, y = "b", max_depth = 4, train = False)
-
-    model1.plot_sensitivity(train = df.iloc[:200], test = df.iloc[200:])
-    model2.plot_sensitivity(train = df.iloc[:200], test = df.iloc[200:])
+##
+##    from random import random, seed
+##    from math import cos
+##    seed(1)
+##    df = pd.DataFrame({"a":[i for i in range(400)],
+##                       "b":[i*0.01 + cos(i/7) + cos(i/17) + random()/5 for i in range(400)]})
+##
+##    model1 = RandomFlorest(df, y = "b", max_depth = 4, how_many_trees = 10, train = False)
+##    model2 = DecisionTree(df, y = "b", max_depth = 4, train = False)
+##
+##    model1.plot_sensitivity(train = df.iloc[:200], test = df.iloc[200:])
+##    model2.plot_sensitivity(train = df.iloc[:200], test = df.iloc[200:])
 
 ##    plt.figure(figsize = (18, 5))
 ##    plt.plot(df["a"], df["b"], label = "Real")
@@ -59,49 +59,49 @@ if __name__ == "__main__":
 ##    plt.legend()
 ##    plt.show()
 ##    print(set(model1.predict(df, max_depth = 2)))
-    1/0
+##    1/0
 
 ###########################################################################
 ##    df = sns.load_dataset("iris")  # ou "tips", "titanic", "penguins", etc.
 ##    df = df.drop(columns = ["species"])
-    import seaborn as sns
-    import pandas as pd
-    import numpy as np
-
-    # Carrega o dataset original e remove a coluna 'species'
-    df = sns.load_dataset("iris")
-    df = df.drop(columns=["species"])
-
-    # Define a seed para reprodutibilidade
-    np.random.seed(42)
-
-    # Número de dados sintéticos que você quer gerar
-    n_sinteticos = 1000
-
-    # Calcula média e desvio padrão de cada coluna
-    means = df.mean()
-    stds = df.std()
-
-    # Gera dados sintéticos com distribuição normal baseada nas estatísticas originais
-    dados_sinteticos = {
-        col: np.random.normal(loc=means[col], scale=stds[col], size=n_sinteticos)
-        for col in df.columns
-    }
-
-    # Cria um DataFrame com os dados sintéticos
-    df_sintetico = pd.DataFrame(dados_sinteticos)
-
-    # Junta os dados originais com os sintéticos
-    df = pd.concat([df, df_sintetico], ignore_index=True)
-
-    t0 = time()
-    model = DecisionTree(data = df.iloc[:], y = "petal_length", max_depth = 5, min_samples = 2, tree_search = True)
-    t1 = time()
-    print(t1-t0)
-    print(model)
-    model.plot_tree()
+##    import seaborn as sns
+##    import pandas as pd
+##    import numpy as np
+##
+##    # Carrega o dataset original e remove a coluna 'species'
+##    df = sns.load_dataset("iris")
+##    df = df.drop(columns=["species"])
+##
+##    # Define a seed para reprodutibilidade
+##    np.random.seed(42)
+##
+##    # Número de dados sintéticos que você quer gerar
+##    n_sinteticos = 1000
+##
+##    # Calcula média e desvio padrão de cada coluna
+##    means = df.mean()
+##    stds = df.std()
+##
+##    # Gera dados sintéticos com distribuição normal baseada nas estatísticas originais
+##    dados_sinteticos = {
+##        col: np.random.normal(loc=means[col], scale=stds[col], size=n_sinteticos)
+##        for col in df.columns
+##    }
+##
+##    # Cria um DataFrame com os dados sintéticos
+##    df_sintetico = pd.DataFrame(dados_sinteticos)
+##
+##    # Junta os dados originais com os sintéticos
+##    df = pd.concat([df, df_sintetico], ignore_index=True)
+##
+##    t0 = time()
+##    model = DecisionTree(data = df.iloc[:], y = "petal_length", max_depth = 5, min_samples = 2, tree_search = True)
+##    t1 = time()
+##    print(t1-t0)
+##    print(model)
+##    model.plot_tree()
 ##    resp1 = model.plot_ci(test = df.iloc[140:])
-    model.plot_sensitivity(train = df.iloc[:900], test = df.iloc[900:])
+##    model.plot_sensitivity(train = df.iloc[:900], test = df.iloc[900:])
 ##    
 ##    
 ##    def simple_loss_2(y) -> float:
@@ -253,3 +253,27 @@ if __name__ == "__main__":
 ##
 ##new_model = DecisionTree.load("test")
 ##new_model.plot_tree()
+
+from math import cos, sin
+from random import seed, random
+seed(1)
+
+n:int = 200
+df:dict = {"x":[*[cos(x/12) + cos(x/7) + random() for x in range(n)],
+                *[3.2]],
+           "y":[*[cos(1 + x/3) + random() for x in range(n)],
+                *[3.2]]}
+
+df:pd.DataFrame = pd.DataFrame(df)
+
+
+model = IsolationDecisionTree(df, max_depth = 6)
+print(model)
+isolated:pd.DataFrame = model.isolate(1)
+print(isolated)
+#model.plot_tree()
+
+plt.figure(figsize = (7, 7))
+plt.scatter(df["x"], df["y"])
+plt.scatter(isolated["x"], isolated["y"], color = "red")
+plt.show()

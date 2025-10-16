@@ -30,6 +30,9 @@ A customizable implementation of decision trees for regression, written from scr
 - **0.1.2**
     - Bug fix to string in a self.division.
     
+- **0.2.0**
+    - Add `IsolationDecisionTree`.
+    
 ---
 
 ## Download
@@ -655,3 +658,57 @@ Outputs:
 - MSE (train vs. test) for each depth.
 - A plot with the optimal depth (minimum test error).
 - Returns the best depth as `int` and the best number of trees as `int`.
+
+# IsolationDecisionTree
+
+A customizable implementation of decision tree for isolation, written from scratch with flexible loss functions.
+
+---
+
+## Inputs
+
+When creating a `IsolationDecisionTree`, you can specify:
+
+- **all DecisionTree parameters (less y and tree_search)**
+...
+
+---
+
+### Detect depth
+
+```python
+tree.detect_depth()
+```
+
+Generates a new `DataFrame` containing metadata about each sample in the training set:
+- **`__dt_depth__`**: the depth of the node in which the sample ended up.
+- **`__dt_leaf__`**: the identifier of the leaf reached by the sample.
+- **`__dt_y__`**: the predicted output value for the sample.
+
+This is useful to analyze how samples are distributed across the tree, debug overfitting, or prepare structures for smoothing techniques.
+
+Returns:
+- A copy of the training `DataFrame` with the additional diagnostic columns.
+
+---
+
+## Isolate
+
+```python
+tree.isolate(threshold = 1) #threshold is a integer
+```
+
+Returns:
+- Outlayers in the data with additional diagnostic columns.
+
+Aditional columns:
+- **`__dt_depth__`**: the depth of the node in which the sample ended up.
+- **`__dt_leaf__`**: the identifier of the leaf reached by the sample.
+
+### Plot tree
+
+Same as `DecisionTree`.
+
+```python
+tree.plot_tree()
+```
