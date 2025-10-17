@@ -21,7 +21,7 @@ def simple_loss(y:pd.DataFrame) -> float:
     return sum([(y_i - y_)*(y_i - y_) for y_i in y])
 
 def calc_loss(loss_1:float, loss_2:float) -> float:
-    return loss_1 + loss_2 #max(loss_1, loss_2)
+    return loss_1 + loss_2
 
 def mean(dt:pd.DataFrame):
     return dt.mean()
@@ -78,7 +78,7 @@ class DecisionTree:
         # Basic information
         self.dt:pd.DataFrame = data
         self.y:str = y
-        self.X:str = [col if col != self.y else None for col in self.dt.columns]
+        self.X:list = [col if col != self.y else None for col in self.dt.columns]
         while None in self.X:
             self.X.remove(None)
         self.__min_samples:int = min_samples
@@ -576,7 +576,7 @@ class RandomFlorest:
         # Basic information
         self.dt:pd.DataFrame = data
         self.y:str = y
-        self.X:str = [col if col != self.y else None for col in self.dt.columns]
+        self.X:list = [col if col != self.y else None for col in self.dt.columns]
         while None in self.X:
             self.X.remove(None)
         self.__min_samples:int = min_samples
@@ -794,3 +794,335 @@ Output: {self.output}
             return answers
         else:
             return best_depth, best_how_many_trees
+
+class IsolationDecisionTree:
+    """
+    ...
+    """
+    __slots__ = variables_methods
+    
+    def __init__(self, data:pd.DataFrame, max_depth:int = 4, min_samples:int = 1, *, 
+                 loss_function:"function" = simple_loss, loss_calc:"function" = calc_loss, function_prediction_leaf:"function" = mean,
+                 plot:Plot = None, train:bool = True, depth:int = None, print:bool = False) -> None:
+        """
+        ...
+        """
+        # Basic information
+        self.dt:pd.DataFrame = data
+        self.X:str = list(self.dt.columns)
+        self.__min_samples:int = min_samples
+        self.len_dt:int = len(data)
+        self.division:float = None
+        self.variable_division:str = None
+        self.__depth:int = depth if depth != None else 0
+        self.__max_depth:int = max_depth
+        self.__print_:bool = print
+        self.__dt_with_y:pd.DataFrame = False # To smoothing tecnique
+
+        # Sons
+        self.ls:DecisionTree = None # Left Son
+        self.rs:DecisionTree = None # Right Son
+
+        # Train
+        self.__function_loss:"function" = loss_function
+        self.__calc_loss:"function" = loss_calc
+        self.value_loss:float = None
+        self.output:float = function_prediction_leaf(self.dt[self.X[0]])
+
+        # To plot loading
+        if plot == None:
+            self.plot = Plot(total = int(2**(self.__max_depth+1) - 1), length = 50)
+        else:
+            self.plot = plot
+
+        # For son
+        self.__args:dict = {"min_samples":self.__min_samples,
+                            "depth":self.__depth+1,
+                            "max_depth":self.__max_depth,
+                            "loss_function":self.__function_loss,
+                            "loss_calc":self.__calc_loss,
+                            "function_prediction_leaf":function_prediction_leaf,
+                            "print":self.__print_,
+                            "plot":self.plot,
+                            "train":False}
+
+        # Train
+        if train:
+            self.train()
+
+    def __call__(self, X:pd.DataFrame) -> float:
+        """
+        ...
+        """
+        return self.predict(X)
+
+    def __print(self, str_:str, end = "\n"):
+        if self.__print_:
+            print(str_, end = end)
+        return None
+
+    def __repr__(self):
+        return f"""
+DataFrame:
+    Columns of DataFrame (X): {', '.join((list(self.X)))}
+    Len of Dataframe: {self.len_dt}
+
+Values:
+    Depth: {'root' if self.__depth == 0 else self.__depth}
+    Division in: {self.variable_division}
+    In value: <= {self.division}
+    Loss in division: {self.value_loss}
+
+Variables:
+    Min Samples: {self.__min_samples}
+    Max Depth: {self.__max_depth}
+
+Functions:
+    Loss Function: {self.__function_loss.__name__}
+    Join Loss: {self.__calc_loss.__name__}
+
+Output: {self.output}
+"""
+
+    def train(self) -> None:
+        """
+        Train the decision tree recursively by splitting nodes.
+        """
+        self.plot.load()
+        self.__dt_with_y:pd.DataFrame = False # To smoothing tecnique
+        
+        self.__print(f"Train:\n\tDepth: {self.__depth} | Lenth: {self.len_dt}")
+        if (self.len_dt < 2*self.__min_samples) or (self.__depth >= self.__max_depth):
+            return None
+
+        all_std:list = sorted([[col, self.dt[col].std()] for col in self.dt.columns], key = lambda x:x[1]) # __calc_loss_tree not necessary
+        col_to_cut:str = all_std[-1][0]
+        std:float = all_std[-1][1]
+        division:int = self.dt[col_to_cut].mean()
+        self.__update_parameters(division, variable = col_to_cut, loss = std) 
+
+        # Update tree
+        self.__update_tree()
+
+        # To stop print load
+        if self.__depth == 0:
+            self.plot.load(close = True)
+        return None
+    def __update_parameters(self, division:float, variable:str, loss:float) -> None:
+        """
+        ...
+        """
+        if (self.value_loss == None) or (self.value_loss > loss):
+            self.division:float = float(division)
+            self.variable_division:str = str(variable)
+            self.value_loss:float = float(loss)
+        return None
+
+    def __update_tree(self) -> None:
+        """
+        ...
+        """
+        if self.variable_division != None:
+            # Division dataframe
+            self.ls:DecisionTree = IsolationDecisionTree(self.dt[self.dt[self.variable_division] <= self.division], **self.__args)
+            self.rs:DecisionTree = IsolationDecisionTree(self.dt[self.dt[self.variable_division] > self.division], **self.__args)
+
+            # Recursive train
+            self.ls.train()
+            self.rs.train()
+        return None
+
+    def detect_depth(self) -> pd.DataFrame:
+        """
+        ...
+        """
+        temporary_depth:list = []
+        temporary_leaf:list = []
+        for i in range(len(self.dt)):
+            memory_depth:list = [-1]
+            which_leaf:list = [0]
+            self.predict(self.dt.iloc[i:i+1], memory_depth = memory_depth, which_leaf = which_leaf)
+            temporary_depth.append(memory_depth[0])
+            temporary_leaf.append(which_leaf[0])
+
+        df_temporary:pd.DataFrame = self.dt.copy()
+        df_temporary["__dt_depth__"] = temporary_depth
+        df_temporary["__dt_leaf__"] = temporary_leaf
+        df_temporary["__dt_y__"] = self.predict(self.dt)
+        return df_temporary
+
+    def isolate(self, threshold:int = 1) -> pd.DataFrame:
+        """
+        ...
+        """
+        df_temporary:pd.DataFrame = self.detect_depth()
+        df_temporary["__id__"] = df_temporary["__dt_leaf__"]
+        df_temporary:pd.DataFrame = df_temporary.groupby("__dt_leaf__").count().sort_values("__dt_depth__")
+        df_temporary:pd.DataFrame = df_temporary.reset_index()
+        leafs_isolated:list = []
+        i:int = 0
+        while i < len(df_temporary):
+            if df_temporary.iloc[i]["__dt_depth__"] <= threshold:
+                leafs_isolated.append(df_temporary.iloc[i]["__dt_leaf__"])
+            else:
+                break
+            i += 1
+        temp:pd.DataFrame = self.detect_depth()
+        temp:pd.DataFrame = temp[temp["__dt_leaf__"].isin(leafs_isolated)].drop(columns = ["__dt_y__"])
+        return temp.reset_index()
+
+    def __recursive_predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None, max_depth = None) -> float:
+        """
+        ...
+        """
+        if (max_depth != None) and (max_depth <= memory_depth[0]):
+            return self.output
+        if (self.division == None) or (self.variable_division == None):
+            return self.output
+
+        self.__print(f"Depth: {self.__depth}, Len: {self.len_dt} | {self.division} <= ({self.variable_division})? {X[self.variable_division].iloc[0]}", end = " ")
+        if X[self.variable_division].iloc[0] <= self.division:
+            self.__print(f"<--")
+##            if which_leaf != None:
+##                which_leaf[0] += 2**memory_depth[0]*0
+            if self.ls != None:
+                return self.ls.predict(X, memory_depth = memory_depth, which_leaf = which_leaf, max_depth = max_depth)
+            else:
+                return self.output
+        else:
+            self.__print(f"-->")
+            if which_leaf != None:
+                which_leaf[0] += 2**memory_depth[0]
+            if self.rs != None:
+                return self.rs.predict(X, memory_depth = memory_depth, which_leaf = which_leaf, max_depth = max_depth)
+            else:
+                return self.output
+
+
+    def predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None, max_depth:int = None) -> float or list:
+        """
+        Predict outputs for one or multiple samples.
+
+        Args:
+            X (pd.DataFrame): Input features. Can be one row or multiple rows.
+
+        Returns:
+            float or list: Predicted value for a single row or list of values for multiple rows.
+        """
+        if memory_depth != None:
+            memory_depth[0] += 1
+
+        if len(X) == 1: # float
+            return self.__recursive_predict(X, memory_depth = memory_depth, which_leaf = which_leaf, max_depth = max_depth)
+        else: # list
+            return [self.__recursive_predict(X.iloc[i:i+1], memory_depth = [0] if memory_depth == None else memory_depth,
+                                             which_leaf = which_leaf, max_depth = max_depth) for i in range(len(X))]
+
+    def save(self, path:str) -> None:
+        """
+        Saves the complete tree.
+        """
+        p = Path(str(path) + ".decisiontree")
+        p.parent.mkdir(parents = True, exist_ok = True)
+        with open(p, "wb") as f:
+            pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, path:str) -> "DecisionTree":
+        """
+        Loads and returns a tree previously saved by DecisionTree.save().
+        """
+        if not ".decisiontree" in path:
+            path = str(path) + ".decisiontree"
+        with open(path, "rb") as f:
+            obj = pickle.load(f)
+        if not isinstance(obj, cls):
+            raise TypeError("The file does not contain a DecisionTree instance.")
+        return obj
+
+    def plot_isolation(self, dims:list = None, isolated:pd.DataFrame = None, figsize:tuple = (6, 6), max_depth:int = None, line_kwargs:dict = None):
+        """
+        ...
+        """
+        if dims is None:
+            dims = [self.X[0], self.X[1]]
+        else:
+            assert len(dims) == 2, f"lenth of dims has be 2 no {len(dims)}!"
+
+        d1, d2 = dims
+        df = self.dt
+
+        plt.figure(figsize=figsize)
+        plt.scatter(df[d1], df[d2], s = 30, alpha = 1/(len(self.dt)**(0.2)))
+
+        if isolated is not None:
+            plt.scatter(isolated[dims[0]], isolated[dims[1]], color = "red", s = 40, label = "Anomaly")
+
+        x1, x2 = float(df[d1].min()), float(df[d1].max())
+        y1, y2 = float(df[d2].min()), float(df[d2].max())
+
+        if line_kwargs is None:
+            line_kwargs = {"linestyle": "--", "color": "red", "linewidth": 0.8, "alpha": 0.7}
+
+        all_cols = list(df.columns)
+
+        def _feat_index(var_name_or_idx):
+            if var_name_or_idx == d1: return 0
+            if var_name_or_idx == d2: return 1
+            if isinstance(var_name_or_idx, (int, np.integer)):
+                try:
+                    col_name = self.X[var_name_or_idx] if hasattr(self, "X") else all_cols[int(var_name_or_idx)]
+                    if col_name == d1: return 0
+                    if col_name == d2: return 1
+                except Exception:
+                    pass
+            if isinstance(var_name_or_idx, str):
+                if var_name_or_idx in all_cols:
+                    return -1
+            return -1
+
+        def _draw_splits(node, rx1, rx2, ry1, ry2, depth):
+            if node is None:
+                return
+            if (getattr(node, "ls", None) is None) and (getattr(node, "rs", None) is None):
+                return
+            if (max_depth is not None) and (depth > max_depth):
+                return
+
+            feat = getattr(node, "variable_division", None)
+            thr  = getattr(node, "division", None)
+            if (feat is None) or (thr is None):
+                _draw_splits(getattr(node, "ls", None), rx1, rx2, ry1, ry2, depth+1)
+                _draw_splits(getattr(node, "rs", None), rx1, rx2, ry1, ry2, depth+1)
+                return
+
+            fidx = _feat_index(feat)
+
+            if fidx == 0:
+                x = float(thr)
+                if rx1 < x < rx2:
+                    plt.plot([x, x], [ry1, ry2], **line_kwargs)
+                _draw_splits(getattr(node, "ls", None), rx1, min(rx2, x), ry1, ry2, depth+1)
+                _draw_splits(getattr(node, "rs", None), max(rx1, x), rx2, ry1, ry2, depth+1)
+
+            elif fidx == 1:
+                y = float(thr)
+                if ry1 < y < ry2:
+                    plt.plot([rx1, rx2], [y, y], **line_kwargs)
+                _draw_splits(getattr(node, "ls", None), rx1, rx2, ry1, min(ry2, y), depth+1)
+                _draw_splits(getattr(node, "rs", None), rx1, rx2, max(ry1, y), ry2, depth+1)
+
+            else:
+                _draw_splits(getattr(node, "ls", None), rx1, rx2, ry1, ry2, depth+1)
+                _draw_splits(getattr(node, "rs", None), rx1, rx2, ry1, ry2, depth+1)
+
+        _draw_splits(self, x1, x2, y1, y2, depth=0)
+
+        #if isolated is not None:
+        #    plt.legend()
+        plt.xlabel(str(d1)); plt.ylabel(str(d2))
+        plt.title(f"Isolation Decision Tree")
+        plt.axis("equal")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
