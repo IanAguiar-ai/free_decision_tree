@@ -1022,7 +1022,7 @@ Output: {self.output}
         """
         Saves the complete tree.
         """
-        p = Path(str(path) + ".decisiontree")
+        p = Path(str(path) + ".isolationdecisiontree")
         p.parent.mkdir(parents = True, exist_ok = True)
         with open(p, "wb") as f:
             pickle.dump(self, f, protocol = pickle.HIGHEST_PROTOCOL)
@@ -1032,13 +1032,70 @@ Output: {self.output}
         """
         Loads and returns a tree previously saved by DecisionTree.save().
         """
-        if not ".decisiontree" in path:
-            path = str(path) + ".decisiontree"
+        if not ".isolationdecisiontree" in path:
+            path = str(path) + ".isolationdecisiontree"
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):
-            raise TypeError("The file does not contain a DecisionTree instance.")
+            raise TypeError("The file does not contain a IsolationDecisionTree instance.")
         return obj
+
+    def plot_tree(self, ax = None, x:float = 0.5, y:float = 1.0, dx:float = 0.25, dy:float = 0.12, figsize:tuple = None, fontsize:int = None):
+        """
+        Plot the tree structure.
+
+        Args:
+            ax (matplotlib.axes.Axes, optional): Existing axis to draw on.
+            x (float): Horizontal position of the current node.
+            y (float): Vertical position of the current node.
+            dx (float): Horizontal distance between parent and children.
+            dy (float): Vertical distance between levels.
+            figsize (tuple, optional): Figure size if a new plot is created.
+            fontsize (int, optional): Font size for node labels.
+
+        Returns:
+            None
+        """
+        if figsize == None:
+            figsize = (3 + 2**(self.__max_depth), 2*self.__max_depth)
+        
+        if ax is None:
+            fig, ax = plt.subplots(figsize = figsize)
+            ax.set_axis_off()
+            self.plot_tree(ax = ax, x = x, y = y, dx = dx, dy = dy, figsize = figsize, fontsize = fontsize)
+            plt.tight_layout()
+            plt.show()
+            return
+
+        # texto do nó
+        if self.variable_division is None:
+            label = f"Leaf\nSamples: {self.len_dt}\nOutput: {self.output:.4f}"
+            color:str = "lightgreen"
+            alpha:float = 1
+        elif self.__depth == 0:
+            label = f"{self.variable_division} <= {self.division:.2f}\nSamples: {self.len_dt}"
+            color:str = "orange"
+            alpha:float = 1
+        else:
+            label = f"{self.variable_division} <= {self.division:.2f}\nSamples: {self.len_dt}"
+            color:str = "lightblue"
+            alpha:float = 1
+
+        if fontsize == None:
+            fontsize = max(15 - 2*self.__depth, 6)
+
+        ax.text(x, y, label, ha = "center", va = "center",
+                bbox = dict(boxstyle = "round", facecolor = color, edgecolor = "black", alpha = alpha),
+                fontsize = fontsize)
+
+        # Son
+        if self.ls is not None:
+            ax.plot([x, x-dx], [y-0.01, y-dy+0.01], color = "black")
+            self.ls.plot_tree(ax = ax, x = x-dx, y = y-dy, dx = dx/2, dy = dy)
+        if self.rs is not None:
+            ax.plot([x, x+dx], [y-0.01, y-dy+0.01], color = "black")
+            self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
+        return None
 
     def plot_isolation(self, dims:list = None, isolated:pd.DataFrame = None, figsize:tuple = (6, 6), max_depth:int = None, line_kwargs:dict = None):
         """
