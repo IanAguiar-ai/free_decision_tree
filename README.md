@@ -754,6 +754,5 @@ data = {"x":[*[cos(i/10)*5 + random() for i in range(100)], 0.1, -0.1, 0.05],
 data = pd.DataFrame(data)
 model = IsolationDecisionTree(data = data, max_depth = 4)
 model.plot_isolation(isolated = model.isolate(threshold = 3))
-![isolation_decisio_tree_1](images/isolation_decision_tree.png)
 ```
 ![isolation_decisio_tree_1](images/isolation_decision_tree_2.png)
