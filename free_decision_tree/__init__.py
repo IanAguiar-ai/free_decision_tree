@@ -1,1 +1,1 @@
-from .free_decision_tree import DecisionTree, RandomFlorest
+from .free_decision_tree import DecisionTree, RandomFlorest, IsolationDecisionTree
