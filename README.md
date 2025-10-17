@@ -661,7 +661,37 @@ Outputs:
 
 # IsolationDecisionTree
 
-A customizable implementation of decision tree for isolation, written from scratch with flexible loss functions.
+**Isolation Decision Tree (IDT)** is a deterministic variant of the *Isolation Forest* algorithm, designed for anomaly and outlier detection through hierarchical partitioning of the feature space.
+Unlike traditional isolation-based methods that rely on random splits and ensembles of trees, IDT constructs a **single decision tree** using a **deterministic splitting rule** based on feature dispersion.
+
+## Method Overview
+At each node, the algorithm selects the feature with the **highest standard deviation** (i.e., the one exhibiting the greatest variability among samples) and splits the dataset at the **mean value** of that feature.
+This process continues recursively until a maximum depth or minimum number of samples per node is reached.
+Each node therefore represents a progressively more homogeneous region of the input space.
+
+## Isolation Principle
+The key assumption follows the intuition of isolation-based models:
+**anomalies or rare samples are isolated closer to the root** because they lie in regions of the space that require fewer splits to separate from the majority of the data.
+The resulting tree can be used to detect anomalous points by analyzing their **leaf depth** or by explicitly identifying **leaves with very few samples**.
+
+## Determinism and Interpretability
+Because all split criteria are deterministic (feature = argmax(std), threshold = mean(feature)), the resulting tree is:
+- **Fully reproducible** (no randomness or seeds required);
+- **Explainable**, since every split can be interpreted as a reduction in data dispersion;
+- **Lightweight**, requiring only a single tree instead of an ensemble.
+
+## Visualization
+IDT provides built-in visualization utilities:
+- `plot_tree()` — shows the hierarchical structure and divisions;
+- `plot_isolation()` — plots 2D cuts and highlights isolated samples;
+- `isolate(threshold)` — retrieves data points classified as isolated based on their depth or leaf size.
+
+## Applications
+Isolation Decision Tree can be used in:
+- Outlier and anomaly detection;
+- Data segmentation based on feature variability;
+- Visual exploration of high-dimensional data distributions;
+- Preprocessing for robust modeling.
 
 ---
 
