@@ -726,6 +726,7 @@ Example:
 ```python
 from math import cos, sin
 from random import seed, random
+import pandas as pd
 seed(1)
 
 n:int = 200
@@ -741,3 +742,18 @@ isolated:pd.DataFrame = model.isolate(threshold = 1) #isolated optional to show 
 model.plot_isolation(isolated = isolated) #isolated optional to show isolated points
 ```
 ![isolation_decisio_tree_1](images/isolation_decision_tree.png)
+
+```python
+from math import cos, sin
+from random import seed, random
+import pandas as pd
+seed(2)
+data = {"x":[*[cos(i/10)*5 + random() for i in range(100)], 0.1, -0.1, 0.05],
+        "y":[*[sin(i/10)*5 + random() for i in range(100)], -0.1, 0.2, -0.15]}
+
+data = pd.DataFrame(data)
+model = IsolationDecisionTree(data = data, max_depth = 4)
+model.plot_isolation(isolated = model.isolate(threshold = 3))
+![isolation_decisio_tree_1](images/isolation_decision_tree.png)
+```
+![isolation_decisio_tree_1](images/isolation_decision_tree_2.png)
