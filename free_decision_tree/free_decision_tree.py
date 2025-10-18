@@ -1049,7 +1049,7 @@ Output: {self.output}
             None
         """
         if figsize == None:
-            figsize = (3 + 2**(self.__max_depth), 2*self.__max_depth)
+            figsize = (3 + 2**(self.__max_depth), 1.5*self.__max_depth)
         
         if ax is None:
             fig, ax = plt.subplots(figsize = figsize)

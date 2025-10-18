@@ -824,8 +824,6 @@ class IsolationDecisionTree:
         self.rs:DecisionTree = None # Right Son
 
         # Train
-        self.__function_loss:"function" = loss_function
-        self.__calc_loss:"function" = loss_calc
         self.value_loss:float = None
         self.output:float = function_prediction_leaf(self.dt[self.X[0]])
 
@@ -839,8 +837,6 @@ class IsolationDecisionTree:
         self.__args:dict = {"min_samples":self.__min_samples,
                             "depth":self.__depth+1,
                             "max_depth":self.__max_depth,
-                            "loss_function":self.__function_loss,
-                            "loss_calc":self.__calc_loss,
                             "function_prediction_leaf":function_prediction_leaf,
                             "print":self.__print_,
                             "plot":self.plot,
@@ -876,10 +872,6 @@ Values:
 Variables:
     Min Samples: {self.__min_samples}
     Max Depth: {self.__max_depth}
-
-Functions:
-    Loss Function: {self.__function_loss.__name__}
-    Join Loss: {self.__calc_loss.__name__}
 
 Output: {self.output}
 """
@@ -1057,7 +1049,7 @@ Output: {self.output}
             None
         """
         if figsize == None:
-            figsize = (3 + 2**(self.__max_depth), 2*self.__max_depth)
+            figsize = (3 + 2**(self.__max_depth), 1.5*self.__max_depth)
         
         if ax is None:
             fig, ax = plt.subplots(figsize = figsize)
