@@ -47,7 +47,6 @@ def idt_similarity_score(real:pd.DataFrame, expected:pd.DataFrame, max_depth:int
 
     return 1/score
 
-
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
     return sum([(y_i - y_)*(y_i - y_) for y_i in y])
