@@ -948,20 +948,26 @@ Output: {self.output}
         ...
         """
         df_temporary:pd.DataFrame = self.detect_depth()
-        df_temporary["__id__"] = df_temporary["__dt_leaf__"]
         df_temporary:pd.DataFrame = df_temporary.groupby("__dt_leaf__").count().sort_values("__dt_depth__")
         df_temporary:pd.DataFrame = df_temporary.reset_index()
+        df_temporary["__probability__"] = df_temporary["__dt_depth__"]/df_temporary["__dt_depth__"].sum()
         leafs_isolated:list = []
-        i:int = 0
-        while i < len(df_temporary):
-            if df_temporary.iloc[i]["__dt_depth__"] <= threshold:
-                leafs_isolated.append(df_temporary.iloc[i]["__dt_leaf__"])
-            else:
-                break
-            i += 1
-        temp:pd.DataFrame = self.detect_depth()
-        temp:pd.DataFrame = temp[temp["__dt_leaf__"].isin(leafs_isolated)].drop(columns = ["__dt_y__"])
-        return temp.reset_index()
+
+        if type(threshold) == int:
+            i:int = 0
+            while i < len(df_temporary):
+                if df_temporary.iloc[i]["__dt_depth__"] <= threshold:
+                    leafs_isolated.append(df_temporary.iloc[i]["__dt_leaf__"])
+                else:
+                    break
+                i += 1
+            temp:pd.DataFrame = self.detect_depth()
+            temp:pd.DataFrame = temp[temp["__dt_leaf__"].isin(leafs_isolated)].drop(columns = ["__dt_y__"])
+            return temp.reset_index()
+        else:
+            temp:pd.DataFrame = self.detect_depth()
+            temp:pd.DataFrame = temp.merge(df_temporary[["__dt_leaf__", "__probability__"]], how = "left", on = "__dt_leaf__")
+            return temp
 
     def __recursive_predict(self, X:pd.DataFrame, *, memory_depth = None, which_leaf = None, max_depth = None) -> float:
         """
@@ -1089,7 +1095,7 @@ Output: {self.output}
             self.rs.plot_tree(ax = ax, x = x+dx, y = y-dy, dx = dx/2, dy = dy)
         return None
 
-    def plot_isolation(self, dims:list = None, isolated:pd.DataFrame = None, figsize:tuple = (6, 6), max_depth:int = None, line_kwargs:dict = None):
+    def plot_isolation(self, dims:list = None, isolated:int = None, figsize:tuple = (6, 6), max_depth:int = None, line_kwargs:dict = None, keyargs_scatter:dict = None):
         """
         ...
         """
@@ -1098,14 +1104,23 @@ Output: {self.output}
         else:
             assert len(dims) == 2, f"lenth of dims has be 2 no {len(dims)}!"
 
+        if (type(isolated) == int) or (isolated) == None:
+            isolated:pd.DataFrame = self.isolate(threshold = isolated)
+
         d1, d2 = dims
         df = self.dt
 
         plt.figure(figsize=figsize)
         plt.scatter(df[d1], df[d2], s = 30, alpha = 1/(len(self.dt)**(0.2)))
 
-        if isolated is not None:
-            plt.scatter(isolated[dims[0]], isolated[dims[1]], color = "red", s = 40, label = "Anomaly")
+        if not "__probability__" in list(isolated.columns):
+            if keyargs_scatter == None:
+                keyargs_scatter:dict = {"color":"red", "s":40, "label":"Anomaly"}
+            plt.scatter(isolated[dims[0]], isolated[dims[1]], **keyargs_scatter)
+        else:
+            if keyargs_scatter == None:
+                keyargs_scatter:dict = {"s":40, "label":"Anomaly", "c":isolated["__probability__"], "cmap":"cividis", "s":40}
+            plt.scatter(isolated[dims[0]], isolated[dims[1]], **keyargs_scatter)
 
         x1, x2 = float(df[d1].min()), float(df[d1].max())
         y1, y2 = float(df[d2].min()), float(df[d2].max())

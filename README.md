@@ -768,8 +768,7 @@ df:dict = {"x":[*[cos(x/12) + cos(x/7) + random() for x in range(n)],
 df:pd.DataFrame = pd.DataFrame(df)
 
 model = IsolationDecisionTree(df, max_depth = 6)
-isolated:pd.DataFrame = model.isolate(threshold = 1) #isolated optional to show isolated points
-model.plot_isolation(isolated = isolated) #isolated optional to show isolated points
+model.plot_isolation(isolated = 1) #isolated optional to show isolated points
 ```
 ![isolation_decisio_tree_1](images/isolation_decision_tree.png)
 
@@ -783,6 +782,6 @@ data = {"x":[*[cos(i/10)*5 + random() for i in range(100)], 0.1, -0.1, 0.05],
 
 data = pd.DataFrame(data)
 model = IsolationDecisionTree(data = data, max_depth = 4)
-model.plot_isolation(isolated = model.isolate(threshold = 3))
+model.plot_isolation(isolated = 3)
 ```
 ![isolation_decisio_tree_1](images/isolation_decision_tree_2.png)
