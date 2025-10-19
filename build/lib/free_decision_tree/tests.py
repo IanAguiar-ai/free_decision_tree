@@ -253,7 +253,7 @@ if __name__ == "__main__":
 ##
 ##new_model = DecisionTree.load("test")
 ##new_model.plot_tree()
-
+"""
 from math import cos, sin
 from random import seed, random
 seed(1)
@@ -270,3 +270,49 @@ model = IsolationDecisionTree(df, max_depth = 6)
 #model.plot_tree()
 model.plot_isolation(isolated = 1) #isolated optional
 model.plot_isolation(isolated = None) #isolated optional
+"""
+
+import pandas as pd
+from free_decision_tree import idt_similarity_score
+
+from math import cos, sin
+from random import seed, random
+seed(1)
+
+n:int = 200
+df:dict = {"x":[*[cos(x/12) + cos(x/7) + random() for x in range(n)],
+                *[3.2]],
+           "y":[*[cos(1 + x/3) + random() for x in range(n)],
+                *[3.2]]}
+df:pd.DataFrame = pd.DataFrame(df)
+df_1 = df.iloc[::2]
+df_2 = df.iloc[::3]
+
+
+plt.figure(figsize = (7,7))
+plt.scatter(df_1["x"], df_1["y"], color = "blue", alpha = 0.4, zorder = 1)
+plt.scatter(df_2["x"], df_2["y"], marker = "s", color = "red", alpha = 0.4, zorder = 0)
+plt.show()
+
+score:float = idt_similarity_score(real = df_1, expected = df_2, max_depth = 4)
+print(f"Similaridade: {score}")
+
+
+
+df:dict = {"x":[*[cos(x/12)*2 + cos(x/7)*2 + random() for x in range(n)],
+                *[3.2]],
+           "y":[*[cos(1 + x/3) - 2 + random() for x in range(n)],
+                *[3.2]]}
+df:pd.DataFrame = pd.DataFrame(df)
+df_2 = df.iloc[::2]
+
+plt.figure(figsize = (7,7))
+plt.scatter(df_1["x"], df_1["y"], color = "blue", alpha = 0.4, zorder = 1)
+plt.scatter(df_2["x"], df_2["y"], marker = "s", color = "red", alpha = 0.4, zorder = 0)
+plt.show()
+
+score:float = idt_similarity_score(real = df_1, expected = df_2, max_depth = 4)
+print(f"Similaridade: {score}")
+
+
+

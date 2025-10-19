@@ -16,6 +16,38 @@ variables_methods:tuple = ("dt", "y", "X", "__min_samples", "len_dt", "division"
                            "plot", "__jumps", "__dt_with_y", "__tree_search", "__tree_search_w",
                            "__all_trees", "__how_many_trees", "__samples_for_tree", "__seed")
 
+# Functions #############################################################################
+
+def idt_similarity_score(real:pd.DataFrame, expected:pd.DataFrame, max_depth:int = 4) -> float:
+    """
+    calculate_similarity
+    """
+
+    # Create models
+    model_real = IsolationDecisionTree(real, max_depth = max_depth)
+    model_exp = IsolationDecisionTree(expected, max_depth = max_depth)
+
+    # Calculate probability
+    prob_real:pd.DataFrame = model_real.isolate(threshold = None)
+    prob_exp:pd.DataFrame = model_exp.isolate(threshold = None)
+
+    assert set(prob_real.columns) == set(prob_exp.columns), f"Columns of real and expected dataframe has been equal!"
+
+    score:float = 0
+    for index in range(len(prob_real)):
+        temp_prob_real:float = prob_real.iloc[index]["__probability__"]
+
+        vetor_real = prob_real.loc[index, model_real.X].values
+        matriz_exp = prob_exp[model_real.X].values
+        distancias = np.linalg.norm(matriz_exp - vetor_real, axis=1)
+        indice_mais_proximo = np.argmin(distancias)
+        temp_prob_exp = prob_exp.iloc[indice_mais_proximo]["__probability__"]
+
+        score += abs(temp_prob_real - temp_prob_exp)
+
+    return 1/score
+
+
 def simple_loss(y:pd.DataFrame) -> float:
     y_:float = y.mean()
     return sum([(y_i - y_)*(y_i - y_) for y_i in y])
@@ -26,6 +58,7 @@ def calc_loss(loss_1:float, loss_2:float) -> float:
 def mean(dt:pd.DataFrame):
     return dt.mean()
 
+# Class #################################################################################
 class Plot:
     """
     ...
@@ -1126,7 +1159,7 @@ Output: {self.output}
         y1, y2 = float(df[d2].min()), float(df[d2].max())
 
         if line_kwargs is None:
-            line_kwargs = {"linestyle": "--", "color": "red", "linewidth": 0.8, "alpha": 0.7}
+            line_kwargs = {"linestyle":"--", "color":"red", "linewidth":1, "alpha":1}
 
         all_cols = list(df.columns)
 
