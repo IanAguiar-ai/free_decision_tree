@@ -8,6 +8,11 @@ if __name__ == "__main__":
     from time import time
     from pathlib import Path
 
+    df = pd.DataFrame({"x":[i for i in range(100_000)], "y":[i for i in range(100_000)]})
+    modelo = DecisionTree(df, y = "y")
+
+    1/0
+
 ##    df = sns.load_dataset("titanic")  # ou "iris", "tips", "titanic", "penguins", etc.
 ##    df["sex"] = df["sex"].replace({"female": 0, "male": 1})
 ##    df["alone"] = df["alone"].replace({False: 0, True: 1})

@@ -71,6 +71,10 @@ class Plot:
         self.count = 0
         self.time = time()
         self.initial_time = time()
+        self.print_()
+
+    def print_(self):
+        print(f"\rStarting model...", end = "")
 
     def load(self, close:bool = False) -> None:
         if self.count == 0:
